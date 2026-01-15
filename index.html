@@ -1,311 +1,2880 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>The Mythological Codex</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>The Mythological Codex — Deluxe</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/feather-icons"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+
 <style>
-    body { background-color: #050505; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; overflow: hidden; }
-    
-    /* CONTROL PANEL */
-    #controls { position: absolute; top: 20px; left: 20px; z-index: 100; background: rgba(0,0,0,0.95); padding: 20px; border-radius: 8px; border: 1px solid #444; width: 250px; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-    h2 { margin: 0 0 15px 0; color: #D4AF37; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-    
-    button { display: block; width: 100%; background: #222; color: #aaa; border: 1px solid #555; padding: 10px; cursor: pointer; margin-bottom: 8px; font-weight: bold; text-align: left; transition: all 0.2s; }
-    button:hover { background: #333; color: white; border-color: #777; }
-    button.active { background: #D4AF37; color: black; border-color: #FFD700; box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
-    
-    /* VIEWS */
-    #canvas { width: 100vw; height: 100vh; display: block; }
-    #analysis-view { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #080808; overflow-y: auto; padding: 40px 40px 40px 300px; box-sizing: border-box; }
-    
-    /* ANALYSIS TEXT STYLES */
-    .essay-container { max-width: 900px; margin-bottom: 100px; }
-    .essay-title { font-size: 32px; color: #D4AF37; margin-bottom: 10px; font-weight: bold; border-bottom: 2px solid #D4AF37; padding-bottom: 15px; }
-    .essay-subtitle { font-size: 18px; color: #888; margin-bottom: 40px; font-style: italic; }
-    
-    .section-title { font-size: 24px; color: #00BFFF; margin-top: 60px; margin-bottom: 20px; border-left: 4px solid #00BFFF; padding-left: 15px; }
-    .sub-section { font-size: 18px; color: #fff; margin-top: 30px; margin-bottom: 10px; font-weight: bold; }
-    
-    p { line-height: 1.8; font-size: 16px; color: #ccc; margin-bottom: 20px; }
-    strong { color: #fff; }
-    em { color: #D4AF37; }
-    
-    .highlight-box { background: #111; border: 1px solid #333; padding: 20px; border-radius: 8px; margin: 30px 0; }
-    .highlight-title { color: #FF69B4; font-weight: bold; margin-bottom: 10px; display: block; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
-    
-    ul { margin-bottom: 20px; }
-    li { margin-bottom: 10px; line-height: 1.6; color: #ccc; }
-    
-    /* D3 STYLES */
-    .node rect { stroke: #333; stroke-width: 1px; }
-    /* HIGHER VISIBILITY FOR TREE LINKS */
-    .link { fill: none; stroke: #666; stroke-width: 4px; opacity: 0.8; }
-    .map-pin { fill: #D4AF37; stroke: #000; cursor: pointer; transition: r 0.2s; }
-    .map-pin:hover { fill: #fff; r: 8; }
-    
-    /* CARD TEXT */
-    .card-header { font-weight: bold; font-size: 16px; fill: #D4AF37; }
-    .col-header { font-size: 9px; fill: #666; font-weight: bold; }
-    .row-role { font-size: 10px; fill: #888; text-transform: uppercase; font-weight: bold; }
-    .row-name { font-size: 12px; fill: #fff; font-weight: bold; }
-    .row-data { font-size: 10px; fill: #aaa; }
-    .col-bg { fill: #0a0a0a; stroke: #333; }
-    .col-title { font-size: 14px; fill: #D4AF37; font-weight: bold; text-anchor: middle; }
+  :root{
+    --bg:#050505;
+    --bg2:#070707;
+    --fg:#e6e6e6;
+    --muted:#9aa0a6;
+    --panel:rgba(0,0,0,0.92);
+    --panel2:rgba(10,10,10,0.95);
+    --border:#2b2b2b;
+    --border2:#3a3a3a;
+    --gold:#D4AF37;
+    --cyan:#00BFFF;
+    --ok:#7CFC00;
+    --warn:#ffcc00;
+    --bad:#ff3355;
+    --shadow:0 18px 45px rgba(0,0,0,.55);
+    --radius:12px;
+    --focus:rgba(212,175,55,.18);
+    --grid:rgba(255,255,255,0.03);
+    --scan:rgba(0,0,0,0.12);
+    --link:#666;
+    --link2:#D4AF37;
+    --btn:#141414;
+    --btn2:#1c1c1c;
+  }
+
+  html,body{height:100%;}
+  body{
+    margin:0;
+    overflow:hidden;
+    color: var(--fg);
+    background:
+      radial-gradient(900px 700px at 18% 8%, rgba(218,176,96,.22), transparent 62%),
+      radial-gradient(900px 700px at 82% 0%, rgba(85,255,255,.10), transparent 58%),
+      radial-gradient(1200px 900px at 50% 120%, rgba(0,0,0,.55), rgba(0,0,0,.92) 72%),
+      linear-gradient(180deg, #1a120c 0%, #090604 100%);
+  }
+  body:before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.030), rgba(255,255,255,.030) 1px, transparent 1px, transparent 4px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.045), rgba(0,0,0,.045) 1px, transparent 1px, transparent 6px),
+      radial-gradient(circle at 25% 18%, rgba(255,255,255,.06), transparent 55%),
+      radial-gradient(circle at 75% 70%, rgba(255,255,255,.05), transparent 60%);
+    mix-blend-mode: overlay;
+    opacity:.34;
+  }
+  body:after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background: radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.86) 100%);
+    opacity:.92;
+  }
+
+
+  /* subtle grid overlay */
+  body:before{
+    content:"";
+    position:fixed; inset:0;
+    background:
+      linear-gradient(to right, var(--grid) 1px, transparent 1px) 0 0/48px 48px,
+      linear-gradient(to bottom, var(--grid) 1px, transparent 1px) 0 0/48px 48px;
+    pointer-events:none;
+    opacity:0.35;
+  }
+
+  /* PANELS */
+  #controls{
+    position:absolute; top:16px; left:16px; z-index:1000;
+    width: 320px;
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  #controls header{
+    padding:14px 14px 10px 14px;
+    border-bottom:1px solid var(--border);
+    background:
+      radial-gradient(600px 120px at 20% 0%, rgba(212,175,55,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(18,18,18,0.65), rgba(0,0,0,0));
+  }
+  #titleRow{display:flex; align-items:flex-end; justify-content:space-between; gap:10px;}
+  #controls h2{
+    margin:0;
+    font-size:16px;
+    color:var(--gold);
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  #miniMeta{
+    font-size:11px; color:var(--muted);
+    opacity:.9;
+    text-align:right;
+    white-space:nowrap;
+  }
+  #controls .section{ padding:12px 14px; border-bottom:1px solid var(--border); }
+  #controls .section:last-child{border-bottom:none;}
+
+  .btnRow{display:grid; grid-template-columns: 1fr 1fr; gap:8px;}
+  .modeRow{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+
+  button{
+    width:100%;
+    border: 1px solid var(--border2);
+    border-radius:10px;
+    background: var(--btn);
+    color:#cfcfcf;
+    padding:10px 10px;
+    cursor:pointer;
+    font-weight:650;
+    text-align:left;
+    transition: transform .12s, background .12s, border-color .12s, color .12s;
+    user-select:none;
+  }
+  button:hover{ background: var(--btn2); border-color:#4a4a4a; color:#fff; transform: translateY(-1px); }
+  button:active{ transform: translateY(0px); }
+  button.active{
+    background: linear-gradient(180deg, rgba(212,175,55,0.95), rgba(212,175,55,0.75));
+    border-color: rgba(255,215,0,0.85);
+    color:#0b0b0b;
+    box-shadow: 0 0 0 4px rgba(212,175,55,0.10) inset, 0 0 22px rgba(212,175,55,0.18);
+  }
+
+
+  /* (fixed) map-tools markup moved into <body> */
+
+
+
+  .tiny{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.35;
+  }
+
+  .fieldLabel{ font-size:11px; color:#bdbdbd; margin:0 0 6px 0; letter-spacing:.25px; }
+  input[type="text"], select{
+    width:100%;
+    padding:10px 10px;
+    border-radius:10px;
+    border:1px solid var(--border2);
+    background: rgba(5,5,5,0.65);
+    color:var(--fg);
+    outline:none;
+  }
+  input[type="text"]:focus, select:focus{
+    border-color: rgba(212,175,55,0.8);
+    box-shadow: 0 0 0 4px rgba(212,175,55,0.10);
+  }
+
+  #searchResults{
+    margin-top:8px;
+    max-height:200px;
+    overflow:auto;
+    border-radius:10px;
+    border:1px solid var(--border2);
+    background: rgba(0,0,0,0.55);
+    display:none;
+  }
+  .srItem{
+    padding:9px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+  }
+  .srItem:last-child{border-bottom:none;}
+  .srItem:hover{ background: rgba(255,255,255,0.06); }
+  .srLeft{display:flex; flex-direction:column; gap:2px;}
+  .srTitle{ font-size:12px; color:#fff; font-weight:700; }
+  .srSub{ font-size:11px; color:var(--muted); }
+  .pill{
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.15);
+    color:#ddd;
+    background: rgba(255,255,255,0.04);
+    white-space:nowrap;
+  }
+
+  #legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .legItem{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 8px;
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:999px;
+    background: rgba(255,255,255,0.03);
+    cursor:pointer;
+    user-select:none;
+    transition: background .12s, border-color .12s;
+    font-size:11px;
+    color:#e8e8e8;
+  }
+  .legItem:hover{ background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+  .swatch{ width:10px; height:10px; border-radius:2px; }
+
+  #inspector{
+    position:absolute; top:16px; right:16px; z-index:1000;
+    width: 380px;
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    max-height: calc(100vh - 32px);
+  }
+  #inspector header{
+    padding:12px 14px 10px 14px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    background:
+      radial-gradient(600px 140px at 80% 0%, rgba(0,191,255,0.12), transparent 60%),
+      linear-gradient(180deg, rgba(20,20,20,0.65), rgba(0,0,0,0));
+  }
+  #insTitle{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+  #insTitle .name{
+    font-size:14px; font-weight:800; color:#fff;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #insTitle .meta{
+    font-size:11px; color:var(--muted);
+  }
+
+  #inspector header .headBtns{
+    display:flex; gap:8px; align-items:center;
+  }
+  .iconBtn{
+    width:auto;
+    padding:8px 10px;
+    font-size:11px;
+    text-align:center;
+    border-radius:10px;
+  }
+
+  #insTabs{
+    display:flex; gap:0;
+    border-bottom:1px solid var(--border);
+  }
+  .tab{
+    flex:1;
+    padding:10px 12px;
+    text-align:center;
+    font-size:11px;
+    color:#cfcfcf;
+    cursor:pointer;
+    user-select:none;
+    border-right:1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .tab:last-child{border-right:none;}
+  .tab.active{
+    background: rgba(212,175,55,0.12);
+    color: var(--gold);
+    font-weight:800;
+  }
+
+  #insBody{
+    padding:12px 14px;
+    overflow:auto;
+  }
+  .kv{
+    display:grid;
+    grid-template-columns: 90px 1fr;
+    gap:8px 10px;
+    align-items:start;
+    font-size:12px;
+  }
+  .k{ color:var(--muted); }
+  .v{ color:#fff; font-weight:650; }
+  .hr{ height:1px; background: rgba(255,255,255,0.08); margin:12px 0; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+  }
+  th,td{
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    padding:8px 6px;
+    vertical-align:top;
+  }
+  th{ color:var(--muted); font-weight:800; text-align:left; font-size:11px; }
+  td{ color:#eaeaea; }
+  .roleTag{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+  }
+  .muted{ color:var(--muted); }
+  .clicky{ cursor:pointer; }
+  .clicky:hover{ text-decoration:underline; }
+
+  #toast{
+    position:absolute;
+    left:50%;
+    bottom:18px;
+    transform: translateX(-50%);
+    z-index:2000;
+    background: rgba(0,0,0,0.78);
+    border: 1px solid rgba(255,255,255,0.16);
+    color:#fff;
+    padding:10px 12px;
+    border-radius:999px;
+    font-size:12px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .18s, transform .18s;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  #toast.show{
+    opacity:1;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  /* CANVAS + ANALYSIS VIEW */
+  #canvas{ width:100vw; height:100vh; display:block; }
+  #analysis-view{
+    display:none;
+    position:absolute; inset:0;
+    background: #070707;
+    overflow-y:auto;
+    padding: 34px 34px 120px 370px;
+    box-sizing:border-box;
+  }
+
+  /* Analysis typography */
+  .essay-container{ max-width: 980px; margin-bottom: 100px; }
+  .essay-title{ font-size: 30px; color: var(--gold); margin-bottom: 10px; font-weight: 900; border-bottom: 2px solid var(--gold); padding-bottom: 15px; }
+  .essay-subtitle{ font-size: 16px; color: #9b9b9b; margin-bottom: 34px; font-style: italic; }
+  .section-title{ font-size: 22px; color: var(--cyan); margin-top: 46px; margin-bottom: 14px; border-left: 4px solid var(--cyan); padding-left: 14px; }
+  .sub-section{ font-size: 16px; color: #fff; margin-top: 20px; margin-bottom: 8px; font-weight: 900; }
+  #analysis-view p{ line-height: 1.85; font-size: 15px; color: #d0d0d0; margin-bottom: 18px; }
+  #analysis-view strong{ color:#fff; }
+  #analysis-view em{ color: var(--gold); }
+  .highlight-box{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.10);
+    padding: 16px 16px;
+    border-radius: 12px;
+    margin: 22px 0;
+  }
+  .highlight-title{
+    color: #FF69B4;
+    font-weight: 900;
+    margin-bottom: 8px;
+    display: block;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  #analysis-view ul{ margin-bottom: 16px; }
+  #analysis-view li{ margin-bottom: 8px; line-height: 1.6; color: #d0d0d0; }
+
+  /* D3 styles */
+  .link{ fill:none; stroke: var(--link); stroke-width: 3.2px; opacity:0.78; }
+  .link.glow{ stroke: var(--link2); opacity:0.95; }
+  .nodeCard{ filter: drop-shadow(0 8px 16px rgba(0,0,0,0.35)); }
+  .nodeRect{ stroke:#3a3a3a; stroke-width:1; fill: rgba(14,14,14,0.94); }
+  .nodeRect.selected{ stroke: rgba(212,175,55,0.95); stroke-width:2; }
+  .card-header{ font-weight: 900; font-size: 16px; fill: var(--gold); }
+  .col-header{ font-size: 9px; fill: #8b8b8b; font-weight: 900; letter-spacing: .5px; }
+  .row-role{ font-size: 10px; fill: #bdbdbd; text-transform: uppercase; font-weight: 900; letter-spacing: .6px; }
+  .row-name{ font-size: 12px; fill: #fff; font-weight: 900; }
+  .row-data{ font-size: 10px; fill: #bdbdbd; }
+  .divider{ stroke: rgba(255,255,255,0.10); stroke-width:1; }
+  .hoverRow{ opacity:0; }
+  .hoverRow.show{ opacity:1; }
+
+  .map-land{ fill: rgba(255,255,255,0.06); stroke: rgba(255,255,255,0.14); stroke-width:1; }
+  .map-line{ stroke: rgba(212,175,55,0.85); stroke-width:2.2; opacity:0.78; stroke-dasharray:6 5; }
+  .map-pin{ fill: var(--gold); stroke:#000; cursor:pointer; }
+  .map-pin:hover{ fill:#fff; }
+
+  .focusGlow{
+    filter: drop-shadow(0 0 10px rgba(212,175,55,0.40)) drop-shadow(0 0 18px rgba(0,191,255,0.25));
+  }
+  .dim{ opacity:0.12 !important; }
+  .hidden{ display:none !important; }
+
+  /* tooltip */
+  #tip{
+    position:fixed;
+    z-index:3000;
+    pointer-events:none;
+    background: rgba(0,0,0,0.80);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 12px;
+    padding: 10px 10px;
+    max-width: 320px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
+    opacity:0;
+    transform: translateY(6px);
+    transition: opacity .10s, transform .10s;
+    font-size:12px;
+  }
+  #tip.show{ opacity:1; transform: translateY(0px); }
+  #tip .tTitle{ color:#fff; font-weight:900; margin-bottom:6px; }
+  #tip .tSub{ color: var(--muted); line-height:1.35; }
+  #tip .tRole{ font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+
+  /* responsive: hide inspector on narrow */
+  @media (max-width: 980px){
+    #inspector{ display:none; }
+    #analysis-view{ padding-left: 360px; }
+  }
+  @media (max-width: 760px){
+    #controls{ width: calc(100vw - 32px); }
+    #analysis-view{ padding-left: 20px; padding-top: 90px; }
+  }
+/* ===== MAP: PROFESSIONAL BASEMAP STYLING ===== */
+.land { fill: rgba(214, 182, 118, .26); stroke: rgba(255, 232, 180, .35); stroke-width: 1.1px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+.borders { fill: none; stroke: rgba(255, 232, 180, .22); stroke-width: 0.9px; opacity: 0.85; }
+.graticule { fill: none; stroke: rgba(255, 232, 180, 0.08); stroke-width: 0.8px; }
+
+.lineage {
+  fill: none;
+  stroke: rgba(212,175,55,0.85);
+  stroke-width: 2.2px;
+  stroke-linecap: round;
+  stroke-dasharray: 5 6;
+}
+
+.pin-halo { fill: rgba(212,175,55,0.18); stroke: rgba(212,175,55,0.25); }
+.pin-core { fill: #D4AF37; stroke: #000; stroke-width: 1px; }
+.pin-label {
+  font-size: 11px;
+  fill: rgba(255,255,255,0.92);
+  paint-order: stroke;
+  stroke: rgba(0,0,0,0.65);
+  stroke-width: 3px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* subtle map vignette overlay */
+.map-vignette {
+  pointer-events: none;
+  fill: url(#vignetteGrad);
+  opacity: 0.9;
+}
+
+/* ===== TOOLTIP ===== */
+#tooltip {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+  min-width: 240px;
+  max-width: 360px;
+  background: rgba(10,10,10,0.96);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  border-radius: 10px;
+  padding: 12px 12px;
+  display: none;
+}
+#tooltip .tt-title { color: #D4AF37; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
+#tooltip .tt-row { font-size: 12px; color: #cfcfcf; line-height: 1.35; }
+#tooltip .tt-row b { color: #fff; }
+
+/* ===== DETAIL DRAWER (click a pin) ===== */
+#detail-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100vh;
+  background: rgba(8,8,8,0.97);
+  border-left: 1px solid rgba(255,255,255,0.12);
+  box-shadow: -20px 0 80px rgba(0,0,0,0.55);
+  z-index: 150;
+  transform: translateX(420px);
+  transition: transform 0.22s ease;
+  padding: 18px 18px 18px 18px;
+  overflow: auto;
+}
+#detail-drawer.open { transform: translateX(0); }
+#detail-drawer .dd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+#detail-drawer .dd-title { color: #D4AF37; font-weight: 900; font-size: 16px; letter-spacing: 0.6px; }
+#detail-drawer .dd-close {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+#detail-drawer .dd-close:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+
+.dd-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.dd-table th, .dd-table td {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 4px;
+  vertical-align: top;
+}
+.dd-table th { text-align: left; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.7px; }
+.dd-role { font-weight: 800; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; }
+.dd-name { color: #fff; font-weight: 800; font-size: 13px; }
+.dd-meta { color: #aaa; font-size: 12px; line-height: 1.35; }
+
+/* ===== MAP MODE TOOLS (inside controls) ===== */
+#map-tools {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+  display: none;
+}
+.tool-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 12px; color: #bbb; }
+.tool-row input[type="checkbox"] { transform: translateY(1px); }
+.tool-row input[type="search"] {
+  width: 100%;
+  background: #111;
+  border: 1px solid #333;
+  color: #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+}
+.tool-row input[type="search"]:focus { border-color: rgba(212,175,55,0.5); box-shadow: 0 0 0 3px rgba(212,175,55,0.12); }
+
+
+/* Map caption */
+.mapCaption{
+  fill: rgba(255,232,180,.75);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: .08em;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.55);
+  stroke-width: 3px;
+}
+
+
+/* Ancient / codex accent */
+header h2{
+  font-family: "Cinzel","IM Fell English", Georgia, serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+header .tiny{ font-family: "IM Fell English", Georgia, serif; opacity:.85; }
+.fieldLabel, .subLabel{
+  font-family: "Cinzel","IM Fell English", Georgia, serif;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+#controls{
+  background: linear-gradient(180deg, rgba(28,18,12,.92), rgba(10,7,5,.92));
+  border: 1px solid rgba(255,215,0,.18);
+  box-shadow: 0 18px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,232,180,.08);
+}
+#controls:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(1200px 600px at 50% -200px, rgba(255,215,0,.08), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018), rgba(255,255,255,.018) 1px, transparent 1px, transparent 6px);
+  opacity:.65;
+  mix-blend-mode: overlay;
+  border-radius: 18px;
+}
+/* =========================================================
+   PROMPT 1 “AMBER CODEX” THEME OVERRIDES (paste LAST)
+   ========================================================= */
+
+:root{
+  /* Amber parchment / codex palette */
+  --bg:#78350f;         /* amber-900 */
+  --bg2:#92400e;        /* amber-800 */
+  --fg:#fffbeb;         /* amber-50 */
+  --muted: rgba(252,211,77,0.78); /* amber-300-ish */
+  --panel: rgba(146,64,14,0.90);  /* amber-800/90 */
+  --panel2: rgba(120,53,15,0.92); /* deeper amber */
+  --border: rgba(251,191,36,0.22); /* amber-400 */
+  --border2: rgba(251,191,36,0.34);
+  --gold:#fbbf24;       /* amber-400 */
+  --cyan:#fcd34d;       /* amber-300 (used as accent) */
+  --ok:#a3e635;         /* lime-400 */
+  --warn:#f59e0b;       /* amber-500 */
+  --bad:#fb7185;        /* rose-400 */
+  --shadow: 0 18px 45px rgba(0,0,0,.55);
+  --radius: 16px;
+  --focus: rgba(251,191,36,.18);
+  --grid: rgba(255,255,255,0.03);
+  --scan: rgba(0,0,0,0.12);
+  --link: rgba(252,211,77,0.35);
+  --link2:#fbbf24;
+  --btn: rgba(120,53,15,0.55);
+  --btn2: rgba(120,53,15,0.78);
+}
+
+/* Base typography */
+body{
+  color: var(--fg) !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif !important;
+  background:
+    radial-gradient(900px 700px at 18% 8%, rgba(251,191,36,.18), transparent 62%),
+    radial-gradient(900px 700px at 82% 0%, rgba(252,211,77,.10), transparent 58%),
+    radial-gradient(1200px 900px at 50% 120%, rgba(0,0,0,.35), rgba(0,0,0,.78) 72%),
+    linear-gradient(180deg, #7c2d12 0%, #2b1106 100%) !important;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.020), rgba(255,255,255,.020) 1px, transparent 1px, transparent 6px),
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.05), transparent 55%),
+    radial-gradient(circle at 75% 70%, rgba(255,255,255,.04), transparent 60%);
+  mix-blend-mode: overlay;
+  opacity:.40;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background: radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.82) 100%);
+  opacity:.92;
+}
+
+/* Headings + labels use Codex fonts (Prompt 1 vibe) */
+#controls h2,
+header h2,
+.fieldLabel,
+.subLabel,
+#dd-title,
+.essay-title{
+  font-family: "Cinzel","IM Fell English", Georgia, serif !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+.tiny,
+.essay-subtitle,
+#analysis-view em{
+  font-family: "IM Fell English", Georgia, serif !important;
+}
+
+/* PANELS: match Prompt 1 (amber glass + border) */
+#controls, #inspector{
+  background: var(--panel) !important;
+  border: 1px solid rgba(251,191,36,0.28) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,232,180,.08) !important;
+  backdrop-filter: blur(8px);
+}
+#controls header, #inspector header{
+  border-bottom: 1px solid rgba(251,191,36,0.22) !important;
+  background:
+    radial-gradient(800px 170px at 20% 0%, rgba(251,191,36,0.18), transparent 60%),
+    linear-gradient(180deg, rgba(120,53,15,0.55), rgba(0,0,0,0)) !important;
+}
+#controls .section,
+#insTabs{
+  border-bottom: 1px solid rgba(251,191,36,0.20) !important;
+}
+
+/* Buttons: Prompt 1 amber button feel */
+button{
+  border: 1px solid rgba(251,191,36,0.28) !important;
+  border-radius: 12px !important;
+  background: rgba(120,53,15,0.45) !important;
+  color: rgba(255,251,235,0.92) !important;
+  font-weight: 750 !important;
+  text-align: left;
+  transition: transform .12s, background .12s, border-color .12s, color .12s;
+}
+button:hover{
+  background: rgba(120,53,15,0.72) !important;
+  border-color: rgba(251,191,36,0.45) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+button.active{
+  background: linear-gradient(180deg, rgba(251,191,36,0.95), rgba(245,158,11,0.85)) !important;
+  border-color: rgba(251,191,36,0.75) !important;
+  color: #1f1308 !important;
+  box-shadow: 0 0 0 4px rgba(251,191,36,0.10) inset, 0 0 22px rgba(251,191,36,0.18) !important;
+}
+
+/* Inputs + selects */
+input[type="text"], input[type="search"], select{
+  background: rgba(60, 25, 8, 0.45) !important;
+  border: 1px solid rgba(251,191,36,0.25) !important;
+  color: var(--fg) !important;
+  border-radius: 12px !important;
+}
+input[type="text"]:focus, input[type="search"]:focus, select:focus{
+  border-color: rgba(251,191,36,0.70) !important;
+  box-shadow: 0 0 0 4px rgba(251,191,36,0.14) !important;
+}
+
+/* Search results list */
+#searchResults{
+  border: 1px solid rgba(251,191,36,0.25) !important;
+  background: rgba(60, 25, 8, 0.45) !important;
+}
+.srItem{
+  border-bottom: 1px solid rgba(251,191,36,0.10) !important;
+}
+.srItem:hover{
+  background: rgba(251,191,36,0.08) !important;
+}
+.pill{
+  border: 1px solid rgba(251,191,36,0.18) !important;
+  background: rgba(251,191,36,0.06) !important;
+  color: rgba(255,251,235,0.88) !important;
+}
+
+/* Tabs: amber highlight */
+.tab{
+  border-right: 1px solid rgba(251,191,36,0.14) !important;
+  background: rgba(251,191,36,0.04) !important;
+}
+.tab.active{
+  background: rgba(251,191,36,0.14) !important;
+  color: var(--gold) !important;
+}
+
+/* Inspector content + tables */
+.hr{ background: rgba(251,191,36,0.12) !important; }
+th{ color: rgba(252,211,77,0.70) !important; }
+td{ color: rgba(255,251,235,0.92) !important; }
+.k{ color: rgba(252,211,77,0.70) !important; }
+.muted{ color: rgba(252,211,77,0.60) !important; }
+
+/* Toast + tooltips: Prompt 1 vibe */
+#toast{
+  background: rgba(0,0,0,0.70) !important;
+  border: 1px solid rgba(251,191,36,0.25) !important;
+  backdrop-filter: blur(8px);
+}
+#tip, #tooltip{
+  background: rgba(0,0,0,0.72) !important;
+  border: 1px solid rgba(251,191,36,0.20) !important;
+}
+
+/* Detail drawer */
+#detail-drawer{
+  background: rgba(60, 25, 8, 0.92) !important;
+  border-left: 1px solid rgba(251,191,36,0.20) !important;
+}
+#detail-drawer .dd-close{
+  background: rgba(120,53,15,0.55) !important;
+  border: 1px solid rgba(251,191,36,0.22) !important;
+}
+
+/* Analysis view: amber essay panel */
+#analysis-view{
+  background: #3b1f07 !important;
+}
+#analysis-view p{ color: rgba(255,251,235,0.88) !important; }
+.section-title{
+  color: rgba(252,211,77,0.92) !important;
+  border-left-color: rgba(252,211,77,0.92) !important;
+}
+.highlight-box{
+  background: rgba(251,191,36,0.06) !important;
+  border: 1px solid rgba(251,191,36,0.18) !important;
+}
+.highlight-title{
+  color: #fb7185 !important; /* keeps the “pink” callout like Prompt 1 */
+}
+
+/* D3/map strokes: amber */
+.link{ stroke: rgba(252,211,77,0.30) !important; }
+.link.glow{ stroke: rgba(251,191,36,0.92) !important; }
+.map-land, .land{
+  fill: rgba(251,191,36,0.10) !important;
+  stroke: rgba(251,191,36,0.20) !important;
+}
+.borders{ stroke: rgba(251,191,36,0.18) !important; }
+.graticule{ stroke: rgba(251,191,36,0.08) !important; }
+.lineage, .map-line{
+  stroke: rgba(251,191,36,0.75) !important;
+}
+.pin-core, .map-pin{ fill: rgba(251,191,36,0.95) !important; }
+.pin-halo{ fill: rgba(251,191,36,0.18) !important; stroke: rgba(251,191,36,0.25) !important; }
+.pin-label{ fill: rgba(255,251,235,0.92) !important; }
+
+/* Make the controls feel closer to Prompt 1’s rounded glass panel */
+#controls::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(1200px 600px at 50% -200px, rgba(251,191,36,.10), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.016), rgba(255,255,255,.016) 1px, transparent 1px, transparent 6px);
+  opacity:.65;
+  mix-blend-mode: overlay;
+  border-radius: 18px;
+}
+
 </style>
 </head>
-<body>
+<body class="bg-amber-900 text-amber-50 font-sans">
 
-<div id="controls">
-    <h2>The Codex</h2>
-    <button id="btn-tree" class="active" onclick="switchMode('tree')">Genealogy Tree</button>
-    <button id="btn-cols" onclick="switchMode('cols')">Comparison Columns</button>
-    <button id="btn-map" onclick="switchMode('map')">Geospatial Map</button>
-    <button id="btn-analysis" onclick="switchMode('analysis')">Synthesis & Analysis</button>
-    <div style="margin-top:15px; font-size:11px; color:#666; border-top:1px solid #333; padding-top:10px;">
-        Use scroll wheel to zoom.<br>Drag to pan.<br>Click nodes for details.
+<div id="controls" role="region" aria-label="Controls">
+  <header>
+    <div id="titleRow">
+      <h2>The Codex</h2>
+      <div id="miniMeta">
+        <div id="modeLabel">Mode: Tree</div>
+        <div class="tiny">Keys: 1–4 • / search • F fit • Esc close</div>
+      </div>
     </div>
+  </header>
+
+  <div class="section">
+    <div class="modeRow">
+<button id="btn-analysis" title="Shortcut: 1">1 · Synthesis & Analysis</button>
+<button id="btn-tree" class="active" title="Shortcut: 2">2 · Genealogy Tree</button>
+<button id="btn-map" title="Shortcut: 3">3 · Geospatial Map</button>
+<button id="btn-cols" title="Shortcut: 4">4 · Comparison Columns</button>
+
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="fieldLabel">Search (culture, role, name, attributes)</div>
+    <input id="search" type="text" placeholder="Try: Zeus, Thursday, Mercury, Baal, Storm..." autocomplete="off" />
+    <div id="searchResults" aria-label="Search results"></div>
+    <div style="margin-top:10px;" class="btnRow">
+      <button id="fitBtn" class="iconBtn" title="Fit current view (F)">Fit View</button>
+      <button id="resetBtn" class="iconBtn" title="Reset zoom/pan">Reset</button>
+    </div>
+    <div style="margin-top:10px;" class="btnRow">
+      <button id="exportSvgBtn" class="iconBtn" title="Download current SVG as .svg">Export SVG</button>
+      <button id="exportPngBtn" class="iconBtn" title="Export PNG (best effort)">Export PNG</button>
+    </div>
+    <div style="margin-top:10px;" class="btnRow">
+      <button id="exportJsonBtn" class="iconBtn" title="Download data as JSON">Export Data</button>
+      <button id="helpBtn" class="iconBtn" title="Quick help">Help</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="fieldLabel">Role focus</div>
+    <select id="roleFocus">
+      <option value="">(none)</option>
+    </select>
+    <div style="margin-top:10px;" class="fieldLabel">Legend (click to focus role)</div>
+    <div id="legend"></div>
+    <div style="margin-top:10px" class="tiny">
+      Wheel: zoom • Drag: pan • Click a culture: inspect • Shift+Click: add/remove compare
+    </div>
+  </div>
+
+  <div class="section" id="treeTools">
+    <div class="fieldLabel">Tree tools</div>
+    <div class="btnRow">
+      <button id="expandAllBtn" class="iconBtn">Expand All</button>
+      <button id="collapseAllBtn" class="iconBtn">Collapse All</button>
+    </div>
+  </div>
+
+  
+
+<div id="map-tools" class="section">
+  <div class="fieldLabel">Map tools</div>
+  <div class="tool-row">
+    <input id="toggle-lines" type="checkbox" checked />
+    <label for="toggle-lines">Show lineage arcs</label>
+  </div>
+  <div class="tool-row">
+    <input id="toggle-borders" type="checkbox" checked />
+    <label for="toggle-borders">Show borders</label>
+  </div>
+  <div class="tool-row">
+    <input id="toggle-graticule" type="checkbox" />
+    <label for="toggle-graticule">Show graticule</label>
+  </div>
+  <div class="tool-row">
+    <input id="toggle-labels" type="checkbox" checked />
+    <label for="toggle-labels">Show labels</label>
+  </div>
+  <div class="tool-row">
+    <input id="map-search" type="search" placeholder="Search culture (e.g., GREEK, EGYPTIAN)..." />
+  </div>
 </div>
 
-<svg id="canvas"></svg>
+<div class="section" id="analysisTools" style="display:none;">
+    <div class="fieldLabel">Analysis quick links</div>
+    <div class="btnRow">
+      <button class="iconBtn" data-scroll="#sec1">Go: Linguistic</button>
+      <button class="iconBtn" data-scroll="#sec2">Go: Succession</button>
+      <button class="iconBtn" data-scroll="#sec3">Go: Etymology</button>
+      <button class="iconBtn" data-scroll="#sec4">Go: Function</button>
+    </div>
+    <div style="margin-top:8px;" class="btnRow">
+      <button class="iconBtn" data-scroll="#sec5">Go: Watchers</button>
+      <button class="iconBtn" data-scroll="#sec6">Go: Closing</button>
+    </div>
+  </div>
+</div>
+
+<svg id="canvas" aria-label="Visualization canvas"></svg>
 
 <div id="analysis-view">
-    <div class="essay-container">
-        <div class="essay-title">The Synthesis: The Unity of Myth</div>
-        <div class="essay-subtitle">A forensic breakdown of the "Cosmic Code" hidden in language, calendar, and archetypes.</div>
+  <div class="essay-container">
+    <div class="essay-title">The Synthesis: The Unity of Myth</div>
+    <div class="essay-subtitle">A forensic breakdown of the "Cosmic Code" hidden in language, calendar, and archetypes.</div>
 
-        <p>When we lay out the pantheons of the world side-by-side, we do not see chaos. We see a coherent, repeating structure—a "source code" of human memory. This analysis breaks down the specific mechanisms that connect these deities across time and space.</p>
+    <p>When we lay out the pantheons of the world side-by-side, we do not see chaos. We see a coherent, repeating structure—a "source code" of human memory. This analysis breaks down the specific mechanisms that connect these deities across time and space.</p>
 
-        <div class="section-title">1. The Linguistic "Smoking Gun"</div>
-        <p>The strongest proof that these deities are not separate entities but shared memories lies in the <strong>Days of the Week</strong>. The 7-day week, originating in Babylon, acts as a Rosetta Stone for identifying gods across cultures. The Romans translated Germanic gods not by their appearance, but by their day.</p>
-        
-        <div class="highlight-box">
-            <span class="highlight-title">THE THURSDAY CONNECTION (THE STORM PRINCE)</span>
-            <p>Thursday is the key. In every major Indo-European language, Thursday is named after the "Thunder God" who acts as the active ruler of the Pantheon.</p>
-            <ul>
-                <li><strong>Norse:</strong> <em>Thor's Day</em> (Thursday).</li>
-                <li><strong>Roman:</strong> <em>Dies Jovis</em> (Jove/Jupiter's Day) &rarr; French <em>Jeudi</em>, Spanish <em>Jueves</em>.</li>
-                <li><strong>Greek:</strong> <em>Zeus</em> (Cognate with Jove/Dyeus).</li>
-                <li><strong>Germanic:</strong> <em>Donnerstag</em> (Thunder Day).</li>
-            </ul>
-            <p><strong>Conclusion:</strong> Thor, Jupiter, and Zeus are the same historical archetype: The Storm King who rules the middle heavens.</p>
-        </div>
+    <div class="section-title" id="sec1">1. The Linguistic "Smoking Gun"</div>
+    <p>The strongest proof that these deities are not separate entities but shared memories lies in the <strong>Days of the Week</strong>. The 7-day week, originating in Babylon, acts as a Rosetta Stone for identifying gods across cultures. The Romans translated Germanic gods not by their appearance, but by their day.</p>
 
-        <div class="highlight-box">
-            <span class="highlight-title">THE TUESDAY CONNECTION (THE WAR GOD)</span>
-            <p>Tuesday reveals the god of War and Iron. The connection here is absolute.</p>
-            <ul>
-                <li><strong>Norse:</strong> <em>Tyr's Day</em> (Tiw's Day).</li>
-                <li><strong>Roman:</strong> <em>Dies Martis</em> (Mars' Day) &rarr; French <em>Mardi</em>, Spanish <em>Martes</em>.</li>
-                <li><strong>Greek:</strong> <em>Ares</em> (Associated with Mars).</li>
-                <li><strong>Babylon:</strong> <em>Nergal</em> (Planet Mars).</li>
-            </ul>
-        </div>
-
-        <div class="section-title">2. The "Cosmic Coup": Father vs. Prince</div>
-        <p>A universal feature of these mythologies is the <strong>Succession Myth</strong>. The current "King of the Gods" is rarely the Creator. Instead, he is a son who overthrew his father. This distinguishes the <em>Father</em> archetype from the <em>Prince</em> archetype.</p>
-        
-        <div class="sub-section">The "Old King" (Saturn/Cronus/Anu)</div>
-        <p>The Father figure is often distant, retired, or imprisoned. He represents the "Golden Age" before the current world order. He is associated with Time (Chronos) and Agriculture (Saturn).</p>
-        <ul>
-            <li><strong>Greek:</strong> Cronus (Deposed by Zeus).</li>
-            <li><strong>Sumerian:</strong> Anu (Remote Sky Father, ceded power to Enlil).</li>
-            <li><strong>Canaanite:</strong> El (The "Father of Years," largely passive compared to Baal).</li>
-            <li><strong>Norse:</strong> The Giants (Ymir) represent the older order before Odin/Thor.</li>
-        </ul>
-
-        <div class="sub-section">The "Storm Prince" (Jupiter/Zeus/Baal)</div>
-        <p>The Prince is the active executive. He wields the Thunderbolt, controls the rain (vital for agriculture), and physically leads the gods in war against Chaos (Dragons/Giants).</p>
-        <ul>
-            <li><strong>Babylon:</strong> Marduk defeats Tiamat (Chaos) to become King.</li>
-            <li><strong>Greece:</strong> Zeus defeats Typhon (Chaos) to secure Olympus.</li>
-            <li><strong>Canaan:</strong> Baal defeats Yam (Sea/Chaos) to earn his palace.</li>
-            <li><strong>India:</strong> Indra defeats Vritra (Dragon) to release the waters.</li>
-        </ul>
-
-        <div class="section-title">3. The Etymological Chain (Japheth's Line)</div>
-        <p>The spread of the Indo-European (Japhetic) peoples left a clear linguistic trail in the names of the Sky Father.</p>
-        <p>The Proto-Indo-European root is <strong>*Dyeus Phter</strong> (Sky Father).</p>
-        <ul>
-            <li><strong>Sanskrit (India):</strong> <em>Dyaus Pita</em></li>
-            <li><strong>Greek:</strong> <em>Zeus Pater</em></li>
-            <li><strong>Latin (Rome):</strong> <em>Jupiter</em> (from Iou-Pater)</li>
-            <li><strong>Germanic:</strong> <em>Tiwaz</em> (became Tyr)</li>
-        </ul>
-        <p>This linguistic DNA proves that Hindu, Greek, Roman, and Norse mythologies are divergent branches of a single original religious system.</p>
-
-        <div class="section-title">4. The Illusion of Names: Function over Identity</div>
-        <p>A critical barrier to understanding mythology is the modern habit of treating ancient names as if they were surnames (like "Smith" or "Johnson"). In reality, most ancient cultures did not care about preserving a "birth name." Instead, they named entities based on their <strong>Function, Characteristic, or Job</strong>.</p>
-        
-        <div class="sub-section">The "Native American" Naming Logic</div>
-        <p>Consider how Native American names work: <em>Sitting Bull</em>, <em>Dances with Wolves</em>, or <em>He Who Makes Rivers</em>. These are descriptions, not arbitrary labels. This same logic applies to the ancient Near East and Europe.</p>
-        
-        <div class="sub-section">The "Baal" Misconception</div>
-        <p>For example, English speakers often assume "Baal" is a specific first name. It is not. In Semitic languages, <strong>Baal</strong> simply means "Master," "Lord," or "Owner."</p>
-        <ul>
-            <li><strong>Baal Hadad:</strong> Lord of Thunder.</li>
-            <li><strong>Baal Zebub:</strong> Lord of Flies.</li>
-            <li><strong>Beelzeboul:</strong> Lord of the High Place.</li>
-        </ul>
-        <p>Similarly, <strong>El</strong> simply means "God" or "Might." <strong>Dyeus</strong> simply means "Sky" or "Day."</p>
-        
-        <p><strong>The Big Reveal:</strong> When we strip away the linguistic shell, we find that different cultures were calling the same "Energy" by the same <em>Functional Title</em> in their own language. The only thing that changed was the vocabulary; the entity and its function remained constant. They were not worshipping different gods; they were describing the same historical forces using different words.</p>
-
-        <div class="section-title">5. The Antediluvian Link: The Watchers</div>
-        <p>Almost every culture remembers a group of "gods" who existed <em>before</em> the current pantheon. These are the Titans (Greek), the Apkallu (Sumerian), or the Watchers (Enochian).</p>
-        <p>They are characterized by:</p>
-        <ul>
-            <li><strong>Teaching Civilization:</strong> They taught humanity metallurgy, astronomy, and cosmetics (Book of Enoch / Prometheus).</li>
-            <li><strong>Imprisonment:</strong> They were bound in the Underworld (Tartarus) by the Storm God (Zeus/God).</li>
-            <li><strong>The Flood:</strong> Their reign ended with a catastrophic Deluge.</li>
-        </ul>
-        <p>This suggests the "Titans" were not gods, but the historical <em>Antediluvian</em> rulers or angelic beings described in Genesis 6.</p>
-
-        <div class="section-title">6. Conclusion</div>
-        <p>The data suggests that human mythology is not a collection of isolated fictions, but a <strong>fragmented history</strong>. Whether through the lens of Genesis (Shem, Ham, Japheth) or secular anthropology, the story remains the same: A single family of archetypes, diverging over time, remembering the same Fathers, Princes, and Wars under different names.</p>
+    <div class="highlight-box">
+      <span class="highlight-title">THE THURSDAY CONNECTION (THE STORM PRINCE)</span>
+      <p>Thursday is the key. In every major Indo-European language, Thursday is named after the "Thunder God" who acts as the active ruler of the Pantheon.</p>
+      <ul>
+        <li><strong>Norse:</strong> <em>Thor's Day</em> (Thursday).</li>
+        <li><strong>Roman:</strong> <em>Dies Jovis</em> (Jove/Jupiter's Day) &rarr; French <em>Jeudi</em>, Spanish <em>Jueves</em>.</li>
+        <li><strong>Greek:</strong> <em>Zeus</em> (Cognate with Jove/Dyeus).</li>
+        <li><strong>Germanic:</strong> <em>Donnerstag</em> (Thunder Day).</li>
+      </ul>
+      <p><strong>Conclusion:</strong> Thor, Jupiter, and Zeus are the same historical archetype: The Storm King who rules the middle heavens.</p>
     </div>
+
+    <div class="highlight-box">
+      <span class="highlight-title">THE TUESDAY CONNECTION (THE WAR GOD)</span>
+      <p>Tuesday reveals the god of War and Iron. The connection here is absolute.</p>
+      <ul>
+        <li><strong>Norse:</strong> <em>Tyr's Day</em> (Tiw's Day).</li>
+        <li><strong>Roman:</strong> <em>Dies Martis</em> (Mars' Day) &rarr; French <em>Mardi</em>, Spanish <em>Martes</em>.</li>
+        <li><strong>Greek:</strong> <em>Ares</em> (Associated with Mars).</li>
+        <li><strong>Babylon:</strong> <em>Nergal</em> (Planet Mars).</li>
+      </ul>
+    </div>
+
+    <div class="section-title" id="sec2">2. The "Cosmic Coup": Father vs. Prince</div>
+    <p>A universal feature of these mythologies is the <strong>Succession Myth</strong>. The current "King of the Gods" is rarely the Creator. Instead, he is a son who overthrew his father. This distinguishes the <em>Father</em> archetype from the <em>Prince</em> archetype.</p>
+
+    <div class="sub-section">The "Old King" (Saturn/Cronus/Anu)</div>
+    <p>The Father figure is often distant, retired, or imprisoned. He represents the "Golden Age" before the current world order. He is associated with Time (Chronos) and Agriculture (Saturn).</p>
+    <ul>
+      <li><strong>Greek:</strong> Cronus (Deposed by Zeus).</li>
+      <li><strong>Sumerian:</strong> Anu (Remote Sky Father, ceded power to Enlil).</li>
+      <li><strong>Canaanite:</strong> El (The "Father of Years," largely passive compared to Baal).</li>
+      <li><strong>Norse:</strong> The Giants (Ymir) represent the older order before Odin/Thor.</li>
+    </ul>
+
+    <div class="sub-section">The "Storm Prince" (Jupiter/Zeus/Baal)</div>
+    <p>The Prince is the active executive. He wields the Thunderbolt, controls the rain (vital for agriculture), and physically leads the gods in war against Chaos (Dragons/Giants).</p>
+    <ul>
+      <li><strong>Babylon:</strong> Marduk defeats Tiamat (Chaos) to become King.</li>
+      <li><strong>Greece:</strong> Zeus defeats Typhon (Chaos) to secure Olympus.</li>
+      <li><strong>Canaan:</strong> Baal defeats Yam (Sea/Chaos) to earn his palace.</li>
+      <li><strong>India:</strong> Indra defeats Vritra (Dragon) to release the waters.</li>
+    </ul>
+
+    <div class="section-title" id="sec3">3. The Etymological Chain (Japheth's Line)</div>
+    <p>The spread of the Indo-European (Japhetic) peoples left a clear linguistic trail in the names of the Sky Father.</p>
+    <p>The Proto-Indo-European root is <strong>*Dyeus Phter</strong> (Sky Father).</p>
+    <ul>
+      <li><strong>Sanskrit (India):</strong> <em>Dyaus Pita</em></li>
+      <li><strong>Greek:</strong> <em>Zeus Pater</em></li>
+      <li><strong>Latin (Rome):</strong> <em>Jupiter</em> (from Iou-Pater)</li>
+      <li><strong>Germanic:</strong> <em>Tiwaz</em> (became Tyr)</li>
+    </ul>
+    <p>This linguistic DNA proves that Hindu, Greek, Roman, and Norse mythologies are divergent branches of a single original religious system.</p>
+
+    <div class="section-title" id="sec4">4. The Illusion of Names: Function over Identity</div>
+    <p>A critical barrier to understanding mythology is the modern habit of treating ancient names as if they were surnames (like "Smith" or "Johnson"). In reality, most ancient cultures did not care about preserving a "birth name." Instead, they named entities based on their <strong>Function, Characteristic, or Job</strong>.</p>
+
+    <div class="sub-section">The "Native American" Naming Logic</div>
+    <p>Consider how Native American names work: <em>Sitting Bull</em>, <em>Dances with Wolves</em>, or <em>He Who Makes Rivers</em>. These are descriptions, not arbitrary labels. This same logic applies to the ancient Near East and Europe.</p>
+
+    <div class="sub-section">The "Baal" Misconception</div>
+    <p>For example, English speakers often assume "Baal" is a specific first name. It is not. In Semitic languages, <strong>Baal</strong> simply means "Master," "Lord," or "Owner."</p>
+    <ul>
+      <li><strong>Baal Hadad:</strong> Lord of Thunder.</li>
+      <li><strong>Baal Zebub:</strong> Lord of Flies.</li>
+      <li><strong>Beelzeboul:</strong> Lord of the High Place.</li>
+    </ul>
+    <p>Similarly, <strong>El</strong> simply means "God" or "Might." <strong>Dyeus</strong> simply means "Sky" or "Day."</p>
+    <p><strong>The Big Reveal:</strong> When we strip away the linguistic shell, we find that different cultures were calling the same "Energy" by the same <em>Functional Title</em> in their own language. The only thing that changed was the vocabulary; the entity and its function remained constant. They were not worshipping different gods; they were describing the same historical forces using different words.</p>
+
+    <div class="section-title" id="sec5">5. The Antediluvian Link: The Watchers</div>
+    <p>Almost every culture remembers a group of "gods" who existed <em>before</em> the current pantheon. These are the Titans (Greek), the Apkallu (Sumerian), or the Watchers (Enochian).</p>
+    <p>They are characterized by:</p>
+    <ul>
+      <li><strong>Teaching Civilization:</strong> They taught humanity metallurgy, astronomy, and cosmetics (Book of Enoch / Prometheus).</li>
+      <li><strong>Imprisonment:</strong> They were bound in the Underworld (Tartarus) by the Storm God (Zeus/God).</li>
+      <li><strong>The Flood:</strong> Their reign ended with a catastrophic Deluge.</li>
+    </ul>
+    <p>This suggests the "Titans" were not gods, but the historical <em>Antediluvian</em> rulers or angelic beings described in Genesis 6.</p>
+
+    <div class="section-title" id="sec6">6. Closing</div>
+    <p>The data suggests that human mythology is not a collection of isolated fictions, but a <strong>fragmented history</strong>. Whether through the lens of Genesis (Shem, Ham, Japheth) or secular anthropology, the story remains the same: A single family of archetypes, diverging over time, remembering the same Fathers, Princes, and Wars under different names.</p>
+  </div>
+</div>
+
+<div id="inspector" role="region" aria-label="Inspector">
+  <header>
+    <div id="insTitle">
+      <div class="name" id="insName">Nothing selected</div>
+      <div class="meta" id="insMeta">Click a node/pin/cell to inspect. Shift+Click to compare.</div>
+    </div>
+    <div class="headBtns">
+      <button class="iconBtn" id="copyBtn" title="Copy selected details as text">Copy</button>
+      <button class="iconBtn" id="clearSelBtn" title="Clear selection">Clear</button>
+    </div>
+  </header>
+  <div id="insTabs">
+    <div class="tab active" data-tab="details">Details</div>
+    <div class="tab" data-tab="compare">Compare</div>
+    <div class="tab" data-tab="stats">Stats</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+  <div id="insBody"></div>
+</div>
+
+<div id="tip"></div>
+<div id="toast"></div>
+
+<div id="tooltip"></div>
+
+<div id="detail-drawer" aria-hidden="true">
+  <div class="dd-head">
+    <div class="dd-title" id="dd-title">DETAIL</div>
+    <button class="dd-close" id="dd-close">Close</button>
+  </div>
+  <div id="dd-body"></div>
 </div>
 
 <script>
-    const data = {"ANTEDILUVIAN": {"parent": "Root", "coords": [31.0, 46.0], "deities": {"Primordial": ["Abzu", "Deep Space / Void", "Fresh Water Abyss", "Sum: Ab (Water) + Zu (Deep)"], "Titan": ["THE WATCHERS", "Fallen Stars", "Book of Enoch: Grigori", "Heb: Iyr (Wakeful Ones)"], "Father": ["ANU", "The Heavens", "Horned Cap", "Sum: An (Sky/High)"], "Prince": ["ENLIL", "The Storm", "Tablet of Destinies", "Sum: En (Lord) + Lil (Wind)"], "War": ["NINURTA", "Saturn", "The Hunter / Net", "Sum: Nin (Lord) + Urta (Barley)"], "Wisdom": ["Enki", "Mercury", "DNA / Serpent", "Sum: En (Lord) + Ki (Earth)"], "Mother": ["Nammu", "Sea", "Mother Goddess", "Sum: Ama (Mother)"], "Love": ["-", "-", "-", "-"], "Sun": ["-", "-", "-", "-"], "Death": ["-", "-", "-", "-"], "Sea": ["-", "-", "-", "-"], "Moon": ["-", "-", "-", "-"], "Fertility": ["-", "-", "-", "-"]}}, "SUMERIAN": {"parent": "ANTEDILUVIAN", "coords": [31.5, 45.5], "deities": {"Father": ["ANU", "Heaven", "Bull / High Judge", "Proto-Semitic: *Antu"], "Prince": ["ENLIL", "Storm", "Wind / Command", "Lord of the Air"], "War": ["NINURTA", "Saturn", "Double-Eagle", "Lord of the Plough"], "Love": ["Inanna", "Venus Star", "Lion / 8-Pt Star", "Nin-An-Na (Lady of Heaven)"], "Wisdom": ["Enki", "Mercury", "Goat-Fish", "Lord of the Earth"], "Sun": ["Utu", "Sunday", "Saw-Knife", "Akk: Shamash (Sun)"], "Death": ["Ereshkigal", "Underworld", "Lapis Lazuli", "Lady of Great Earth"], "Mother": ["Ninhursag", "Mountain", "Womb Goddess", "Lady of Sacred Mountain"], "Sea": ["Enki", "Abzu", "Fresh Water", "The Watery Deep"], "Moon": ["Nanna", "Monday", "Crescent Boat", "Lord of Wisdom"], "Fertility": ["Damuzi", "Shepherd", "Dying God", "Dumuzid (Faithful Son)"], "Primordial": ["Nammu", "Sea", "Primeval Mother", "Root of Tiamat"], "Titan": ["Anu", "Sky", "Dome", "High One"]}}, "BABYLONIAN": {"parent": "SUMERIAN", "coords": [32.5, 44.4], "deities": {"Father": ["EA / ENLIL", "Old Gods", "Water Pot", "Lord of Deep"], "Prince": ["MARDUK", "Thursday", "Dragon Slayer", "Amar-Utu (Calf of Sun)"], "War": ["NERGAL", "Tuesday", "Lion-Man", "Lord of the Grave"], "Love": ["Ishtar", "Friday", "Lion / Star", "Cognate: Astarte"], "Wisdom": ["Nabu", "Wednesday", "Stylus / Tablet", "Root: Nb (To Prophesy)"], "Sun": ["Shamash", "Sunday", "Solar Disk", "Root: *Sms (Sun)"], "Death": ["Nergal", "Grave", "Plague", "Lord of Transformation"], "Mother": ["Sarpanit", "Seed", "Birth", "Zer-Banitu (Creator of Seed)"], "Sea": ["Ea", "Deep", "Fish-Man", "House of Water"], "Moon": ["Sin", "Monday", "Lamp", "Su-En (Lord of Knowledge)"], "Fertility": ["Tammuz", "Spring", "Shepherd", "Dumuzi Derivative"], "Primordial": ["Apsu", "Fresh Water", "Aquifer", "Father Deep"], "Titan": ["Tiamat", "Salt Water", "Chaos Dragon", "Sea"]}}, "ASSYRIAN": {"parent": "BABYLONIAN", "coords": [36.3, 43.1], "deities": {"Father": ["ANU", "Sky", "Heavens", "The High One"], "Prince": ["ASHUR", "The Disk", "Archer", "A\u0161\u0161ur (To be Happy)"], "War": ["NINURTA", "Saturn", "Storm Bird", "Champion of Enlil"], "Love": ["Ishtar", "Friday", "Lioness", "Issar (Assyrian form)"], "Wisdom": ["Ea", "Sage", "Magic", "Lord of Wisdom"], "Sun": ["Shamash", "Sunday", "Eye", "Judge of Heaven"], "Death": ["Nergal", "Tomb", "Burner", "Ruler of the Dead"], "Mother": ["Mullissu", "Queen", "Throne", "Nin-Lil (Lady Air)"], "Sea": ["Ea", "Water", "Purification", "Source of Rivers"], "Moon": ["Sin", "Monday", "Crescent", "Wise Lord"], "Fertility": ["Tammuz", "Crops", "Grain", "Life of Earth"], "Primordial": ["-", "-", "-", "-"], "Titan": ["Tiamat", "Dragon", "Chaos", "Deep"]}}, "ZOROASTRIAN": {"parent": "ASSYRIAN", "coords": [30.0, 53.0], "deities": {"Father": ["AHURA MAZDA", "Wisdom", "Spirit / Fire", "Ahura (Lord) + Mazda"], "Prince": ["MITHRA", "Covenant", "Light / Oath", "Root: *Mi- (To Bind)"], "War": ["VERETHRAGNA", "Victory", "Boar", "Verethra (Obstacle)"], "Love": ["Spenta Armaiti", "Devotion", "Earth", "Holy Devotion"], "Wisdom": ["Vohu Manah", "Good Mind", "Intelligence", "Good Thought"], "Sun": ["Mithra", "Sun", "Chariot", "The Light"], "Death": ["Ahriman", "Darkness", "Destruction", "Angra Mainyu"], "Mother": ["Anahita", "Water", "Purity", "The Immaculate One"], "Sea": ["Apam Napat", "Waters", "Grandson", "Child of Waters"], "Moon": ["Mah", "Monday", "Moon", "PIE: *MeHns"], "Fertility": ["Anahita", "River", "Life", "The Moist One"], "Primordial": ["Zurvan", "Time", "Infinite Time", "Zurvan"], "Titan": ["-", "-", "-", "-"]}}, "EGYPTIAN": {"parent": "SUMERIAN", "coords": [26.8, 30.8], "deities": {"Father": ["AMUN-RA", "Hidden", "Ram / Goose", "Imn (Hidden) + R\ua725"], "Prince": ["HORUS", "Rising Sun", "Falcon", "\u1e24r (The Distant One)"], "War": ["SEKHMET", "Red Star", "Lioness", "S\u1e2bm (Power)"], "Love": ["Hathor", "Venus", "Cow / Mirror", "\u1e24wt-\u1e24r (House of Horus)"], "Wisdom": ["Thoth", "Wednesday", "Ibis", "D\u1e25wty (He of Ibis)"], "Sun": ["Ra", "Sunday", "Barque", "R\ua725 (Sun)"], "Death": ["Osiris", "Judge", "Crook & Flail", "Wsjr (Powerful?)"], "Mother": ["Isis", "Throne", "Magic Knot", "\ua722st (Throne)"], "Sea": ["Sobek", "Nile", "Crocodile", "Sbk (Uniter)"], "Moon": ["Khonsu", "Monday", "Disk", "Khnsw (Traveller)"], "Fertility": ["Geb", "Earth", "Goose", "Gb (Earth)"], "Primordial": ["Nun", "Void", "Dark Waters", "Nnw"], "Titan": ["Atum", "Setting Sun", "Self-Created", "Tm"]}}, "YORUBA": {"parent": "EGYPTIAN", "coords": [7.8, 5.0], "deities": {"Father": ["OLORUN", "Sky Owner", "Breath", "Oni (Owner) + Orun"], "Prince": ["SHANGO", "Thursday", "Double Axe", "Striker?"], "War": ["OGUN", "Tuesday", "Iron / Machete", "Ogun (War)"], "Love": ["Oshun", "Venus", "Brass / River", "Source?"], "Wisdom": ["Orunmila", "Fate", "Divination", "Heaven Knows Salvation"], "Sun": ["Olorun", "Day", "The Sun itself", "Sun Owner"], "Death": ["Iku", "Death", "Club", "Death Personified"], "Mother": ["Yemaya", "Mother", "7 Skirts", "Mother of Fish"], "Sea": ["Olokun", "Ocean", "Deep Sea", "Owner of Ocean"], "Moon": ["Oshu", "Month", "Moon", "Month/Moon"], "Fertility": ["Oya", "Niger", "Wind", "She Who Tears"], "Primordial": ["-", "-", "-", "-"], "Titan": ["Olodumare", "Source", "Supreme", "Owner"]}}, "HAITIAN": {"parent": "YORUBA", "coords": [18.9, -72.2], "deities": {"Father": ["BON DIEU", "Sky", "High God", "Good God"], "Prince": ["DAMBALLAH", "Serpent", "White Snake", "Dahomey: Dan"], "War": ["OGOUN", "Iron", "Red / Rum", "From Yoruba Ogun"], "Love": ["Erzulie", "Pink", "Jewelry", "Ezili (Goddess)"], "Wisdom": ["Papa Legba", "Crossroads", "Keys", "Yoruba: Elegba"], "Sun": ["Legba", "Sun", "Old Man", "Solar Aspect"], "Death": ["Baron Samedi", "Grave", "Top Hat", "Fr: Samedi (Sat)"], "Mother": ["Ezili Dantor", "Protector", "Scars", "Black Madonna"], "Sea": ["Agwe", "Sea", "Boat", "Sovereign of Seas"], "Fertility": ["Ayida-Weddo", "Rainbow", "Snake", "Rainbow Serpent"], "Primordial": ["-", "-", "-", "-"], "Titan": ["Bondye", "Good God", "Remote", "Bon Dieu"]}}, "CANAANITE": {"parent": "SUMERIAN", "coords": [32.0, 35.0], "deities": {"Father": ["EL", "Saturn", "Father of Years", "The Father"], "Prince": ["BAAL", "Thursday", "Club / Storm", "Ba\u02bfl (Master)"], "War": ["ANAT", "Tuesday", "Virgin Warrior", "\u02bfnt (Answer?)"], "Love": ["Astarte", "Friday", "Star", "\u02bf\u1e6ftrt (Venus)"], "Wisdom": ["Kothar", "Craft", "Smith", "Skillful"], "Sun": ["Shapash", "Sun", "Torch", "\u0160p\u0161 (Sun)"], "Death": ["Mot", "Drought", "Swallower", "Mwt (Death)"], "Mother": ["Asherah", "Sea Lady", "Tree", "She who treads sea"], "Sea": ["Yam", "Sea", "Serpent", "Ym (Sea)"], "Moon": ["Yarikh", "Moon", "City", "Yr\u1e2b (Moon)"], "Fertility": ["Dagon", "Grain", "Fish/Grain", "Dgn (Grain)"], "Primordial": ["Chaos", "-", "-", "-"], "Titan": ["El", "Saturn", "Bull", "God"]}}, "PHOENICIAN": {"parent": "CANAANITE", "coords": [33.5, 35.3], "deities": {"Father": ["BAAL SHAMEM", "Heavens", "Lord of Sky", "Lord of Heavens"], "Prince": ["MELQART", "Hercules", "Lion Skin", "King of City"], "War": ["RESHEPH", "Mars", "Gazelle", "R\u0161p (Flame)"], "Love": ["Astarte", "Friday", "Sphinx", "Lady"], "Wisdom": ["Eshmun", "Healing", "Serpent", "\u0160mn (Oil)"], "Sun": ["Baal Hammon", "Solar", "Ram", "Lord of Brazier"], "Death": ["Mot", "Death", "Heat", "Death"], "Mother": ["Tanit", "Lady", "Triangle", "Serpent Lady?"], "Sea": ["Yam", "Waves", "Judge", "Sea"], "Moon": ["Yarikh", "Lunar", "Sickle", "Moon"], "Fertility": ["Eshmun", "Spring", "Pomegranate", "Healer"], "Primordial": ["-", "-", "-", "-"], "Titan": ["El", "Saturn", "Chronos", "God"]}}, "HINDU": {"parent": "SUMERIAN", "coords": [20.5, 78.9], "deities": {"Father": ["BRAHMA", "Creator", "4 Faces", "Brh (Expand)"], "Prince": ["INDRA", "Thursday", "Vajra", "Indu (Drop)"], "War": ["KARTIKEYA", "Tuesday", "Peacock", "Pleiades"], "Love": ["Lakshmi", "Friday", "Lotus", "Lakshya (Goal)"], "Wisdom": ["Budha", "Wednesday", "Merchant", "Budh (Awake)"], "Sun": ["Surya", "Sunday", "7 Horses", "Svar (Shine)"], "Death": ["Yama", "Judge", "Noose", "Twin/Restrainer"], "Mother": ["Durga", "Power", "Tiger", "Fortress"], "Sea": ["Varuna", "Ocean", "Makara", "Var (Cover)"], "Moon": ["Chandra", "Monday", "Antelope", "Chand (Shine)"], "Fertility": ["Prithvi", "Earth", "Cow", "The Vast One"], "Primordial": ["Aditi", "Infinity", "Mother", "Unbound"], "Titan": ["Dyaus Pita", "Sky Father", "Bull", "Dyaus + Pita"]}}, "GREEK": {"parent": "HINDU", "coords": [39.0, 22.0], "deities": {"Father": ["CRONUS", "Saturn", "Golden Age", "Titan King"], "Prince": ["ZEUS", "Thursday", "Lightning", "PIE: *Dyeus"], "War": ["ARES", "Tuesday", "Spear", "Are (Bane)"], "Love": ["Aphrodite", "Friday", "Shell", "Aphros (Foam)"], "Wisdom": ["Hermes", "Wednesday", "Caduceus", "Herma (Stones)"], "Sun": ["Apollo", "Sunday", "Lyre", "Destroyer?"], "Death": ["Hades", "Unseen", "Bident", "Unseen One"], "Mother": ["Hera", "Queen", "Peacock", "Protector"], "Sea": ["Poseidon", "Earthshaker", "Trident", "Lord + Earth"], "Moon": ["Selene", "Monday", "Chariot", "Selas (Light)"], "Fertility": ["Demeter", "Harvest", "Wheat", "Earth Mother"], "Primordial": ["Chaos", "Void", "Gap", "Khaos"], "Titan": ["Cronus", "Saturday", "Sickle", "Ker"]}}, "ROMAN": {"parent": "GREEK", "coords": [41.9, 12.5], "deities": {"Father": ["SATURN", "Saturday", "Old King", "God of Seeds"], "Prince": ["JUPITER", "Thursday", "Eagle", "Iou-Pater"], "War": ["MARS", "Tuesday", "Wolf", "Mavors"], "Love": ["Venus", "Friday", "Rose", "Venes (Desire)"], "Wisdom": ["Mercury", "Wednesday", "Coin", "Merchandise"], "Sun": ["Sol", "Sunday", "Crown", "PIE: *Sawel"], "Death": ["Pluto", "Wealth", "Keys", "Ploutos (Wealth)"], "Mother": ["Juno", "Queen", "Goat", "Iuvenis (Youth)"], "Sea": ["Neptune", "Sea", "Trident", "Nebh (Damp)"], "Moon": ["Luna", "Monday", "Crescent", "Lucna (Shiner)"], "Fertility": ["Ceres", "Grain", "Sheaf", "Ker (Grow)"], "Primordial": ["Chaos", "-", "-", "-"], "Titan": ["Saturn", "Saturday", "Scythe", "Sowing"]}}, "NORSE": {"parent": "ROMAN", "coords": [60.4, 8.4], "deities": {"Father": ["ODIN", "Wednesday", "One Eye", "Wotan (Fury)"], "Prince": ["THOR", "Thursday", "Hammer", "Thunder"], "War": ["TYR", "Tuesday", "Hand", "Tiwaz (God)"], "Love": ["Freyja", "Friday", "Falcon", "Prauja (Lady)"], "Wisdom": ["Mimir", "Well", "Head", "Mim (Memory)"], "Sun": ["Sunna", "Sunday", "Shield", "Sunnon"], "Death": ["Hel", "Underworld", "Half-Corpse", "Concealed"], "Mother": ["Frigg", "Queen", "Distaff", "Beloved"], "Sea": ["Njord", "Ship", "Vanir", "Nerthuz"], "Moon": ["Mani", "Monday", "Moon", "Meno (Moon)"], "Fertility": ["Frey", "Phallic", "Boar", "Praujaz (Lord)"], "Primordial": ["Ginnungagap", "Void", "Magic Void", "Gap"], "Titan": ["Ymir", "Giant", "Ice", "Twin"]}}, "CELTIC": {"parent": "NORSE", "coords": [53.4, -7.0], "deities": {"Father": ["THE DAGDA", "All-Father", "Club", "Good God"], "Prince": ["LUGH", "Light", "Spear", "Leuk (Light)"], "War": ["MORRIGAN", "Battle", "Crow", "Terror Queen"], "Love": ["Aengus Og", "Youth", "Birds", "One Strength"], "Wisdom": ["Ogma", "Words", "Ogham", "Ogmos (Track)"], "Sun": ["Lugh", "Lammas", "Harvest", "Shining One"], "Death": ["Donn", "Dark One", "Red Rider", "Dark/Brown"], "Mother": ["Danu", "River", "Breasts", "Flowing Water"], "Sea": ["Manannan", "Ocean", "Mist", "Ireland/Water"], "Moon": ["Arianrhod", "Wheel", "Silver", "Silver Wheel"], "Fertility": ["Brigid", "Spring", "Fire", "High One"], "Primordial": ["-", "-", "-", "-"], "Titan": ["Danu", "Waters", "Mother", "River"]}}, "DRUID": {"parent": "CELTIC", "coords": [46.2, 2.2], "deities": {"Father": ["TARANIS", "Thunder", "Wheel", "Taran (Thunder)"], "Prince": ["TOUTATIS", "Tribe", "Protector", "Teuta (Tribe)"], "War": ["CAMULUS", "War", "Sword", "Camulo (Champion)"], "Love": ["Sirona", "Star", "Snake", "Ster (Star)"], "Wisdom": ["Ogmios", "Eloquence", "Chains", "Leading"], "Sun": ["Belenus", "Bright", "Horse", "Bel (Bright)"], "Death": ["Dis Pater", "Father", "Ancestor", "Rich Father"], "Mother": ["Rosmerta", "Plenty", "Cornucopia", "Provider"], "Sea": ["Sequana", "Seine", "Duck", "Fast Flowing"], "Moon": ["-", "-", "-", "-"], "Fertility": ["Cernunnos", "Horned", "Stag", "Karnon (Horn)"], "Primordial": ["-", "-", "-", "-"], "Titan": ["-", "-", "-", "-"]}}, "CHINESE": {"parent": "HINDU", "coords": [35.8, 104.1], "deities": {"Father": ["JADE EMPEROR", "Polestar", "Tablet", "Yu Huang"], "Prince": ["ERLANG SHEN", "Nephew", "3rd Eye", "Second Son"], "War": ["GUAN YU", "Mars", "Guan Dao", "Lord Guan"], "Love": ["Chang'e", "Moon", "Rabbit", "Beautiful Lady"], "Wisdom": ["Laozi", "Dao", "Scroll", "Old Master"], "Sun": ["Xihe", "Sun", "Charioteer", "Breath Harmony"], "Death": ["Yanluo Wang", "Judge", "Book", "King Yama"], "Mother": ["Xi Wangmu", "Queen", "Peaches", "Queen Mother"], "Sea": ["Dragon King", "East Sea", "Dragon", "Long Wang"], "Moon": ["Chang'e", "Monday", "Elixir", "Moon Goddess"], "Fertility": ["Hou Tu", "Earth", "Soil", "Queen Earth"], "Primordial": ["Wuji", "Void", "Limitless", "No Ridgepole"], "Titan": ["Pangu", "Giant", "Cosmic Egg", "Antiquity"]}}, "JAPANESE": {"parent": "CHINESE", "coords": [36.2, 138.2], "deities": {"Father": ["IZANAGI", "Father", "Spear", "First Male"], "Prince": ["SUSANOO", "Storm", "Sword", "Impetuous"], "War": ["HACHIMAN", "Arrow", "Bow", "God 8 Banners"], "Love": ["Uzume", "Dawn", "Dance", "Whirling"], "Wisdom": ["Tenjin", "Scholar", "Plum", "Heavenly"], "Sun": ["Amaterasu", "Sun", "Mirror", "Shining"], "Death": ["Izanami", "Yomi", "Decay", "She Who Invites"], "Mother": ["Izanami", "Mother", "Creation", "First Female"], "Sea": ["Ryujin", "Dragon", "Jewels", "Dragon God"], "Moon": ["Tsukuyomi", "Moon", "Mirror", "Moon Reading"], "Fertility": ["Inari", "Fox", "Rice", "Carrying Rice"], "Primordial": ["Chaos", "-", "Egg", "Konton"], "Titan": ["Izanagi", "Creator", "Spear", "He Who Invites"]}}, "AZTEC": {"parent": "CHINESE", "coords": [19.4, -99.1], "deities": {"Father": ["OMETEOTL", "Two", "Duality", "Lord Duality"], "Prince": ["HUITZILOPOCHTLI", "Sun/War", "Hummingbird", "Left-Hand Hummingbird"], "War": ["HUITZILOPOCHTLI", "Mars", "Blue Skin", "Warrior"], "Love": ["Xochiquetzal", "Flower", "Butterfly", "Precious Flower"], "Wisdom": ["Quetzalcoatl", "Venus", "Wind", "Feathered Serpent"], "Sun": ["Tonatiuh", "Disk", "Calendar", "Goes Forth"], "Death": ["Mictlantecuhtli", "Bone", "Skeleton", "Lord Mictlan"], "Mother": ["Coatlicue", "Skirt", "Snakes", "Serpent Skirt"], "Sea": ["Chalchiuhtlicue", "Jade", "Water Skirt", "Jade Skirt"], "Moon": ["Coyolxauhqui", "Moon", "Bells", "Painted Bells"], "Fertility": ["Tlaloc", "Rain", "Fangs", "Makes Sprout"], "Primordial": ["-", "-", "-", "-"], "Titan": ["Ometeotl", "Dual", "Two-Lord", "Two God"]}}, "ALGONQUIAN": {"parent": "AZTEC", "coords": [45.0, -84.0], "deities": {"Father": ["GREAT SPIRIT", "Creator", "Invisible", "Kitchi-Manitou"], "Prince": ["MANITOU", "Spirit", "Life Force", "Mystery"], "War": ["HIAWATHA", "Hero", "Peacemaker", "Makes Rivers"], "Love": ["-", "-", "-", "-"], "Wisdom": ["Gluskap", "Teacher", "Stone Canoe", "Good Man"], "Sun": ["Grandfather", "Sun", "Day Maker", "Sun Spirit"], "Death": ["-", "-", "-", "-"], "Mother": ["Nokomis", "Grandmother", "Earth", "Grandmother"], "Sea": ["Great Water", "Ocean", "Whale", "Big Water"], "Moon": ["Grandmother", "Moon", "Night Sun", "Moon Spirit"], "Fertility": ["Earth Mother", "Earth", "Harvest", "Mother Earth"], "Primordial": ["-", "-", "-", "-"], "Titan": ["-", "-", "-", "-"]}}, "POLYNESIAN": {"parent": "HINDU", "coords": [-15.0, -140.0], "deities": {"Father": ["RANGI", "Sky", "Lover", "Sky Father"], "Prince": ["TANE", "Forest", "Trees", "Man/Male"], "War": ["TU", "War", "Grimace", "Angry Face"], "Love": ["Hina", "Moon", "Tapa", "Girl/White"], "Wisdom": ["Maui", "Trickster", "Fishhook", "Culture Hero"], "Sun": ["Tama-nui-te-ra", "Sun", "Snare", "Great Son"], "Death": ["Hine-nui-te-po", "Night", "Obsidian", "Woman of Night"], "Mother": ["Papa", "Earth", "Soil", "Flat Surface"], "Sea": ["Tangaroa", "Ocean", "Fish", "God of Sea"], "Moon": ["Marama", "Moon", "Fan", "Moon"], "Fertility": ["Rongo", "Peace", "Potato", "Peace/Sound"], "Primordial": ["Po", "Darkness", "Night", "Void"], "Titan": ["Papa", "Earth", "Mother", "Foundation"]}}, "HAWAIIAN": {"parent": "POLYNESIAN", "coords": [19.8, -155.5], "deities": {"Father": ["KANE", "Life", "Sunlight", "Man/Male"], "Prince": ["LONO", "Peace", "Clouds", "News/Sound"], "War": ["KU", "War", "Snatcher", "Upright"], "Love": ["Laka", "Hula", "Maile", "Tame/Gentle"], "Wisdom": ["Lono", "Peace", "Fertility", "Agriculture"], "Sun": ["Kane", "Sun", "East", "Leading Star"], "Death": ["Milu", "Underworld", "Darkness", "Lord of Dead"], "Mother": ["Haumea", "Birth", "Breadfruit", "Birth Goddess"], "Sea": ["Kanaloa", "Ocean", "Squid", "Secure/Firm"], "Moon": ["Mahina", "Moon", "Kapa", "Moon"], "Fertility": ["Hina", "Moon", "Coral", "White"], "Primordial": ["-", "-", "-", "-"], "Titan": ["-", "-", "-", "-"]}}};
-    const worldMap = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]]}, "properties": {"name": "Ocean"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-10, 35], [50, 15], [30, -35], [10, -35], [-15, 15], [-10, 35]]]}, "properties": {"name": "Africa"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-10, 36], [40, 36], [60, 60], [40, 70], [-10, 60], [-10, 36]]]}, "properties": {"name": "Europe"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[40, 36], [140, 36], [130, 5], [80, 5], [60, 20], [40, 36]]]}, "properties": {"name": "Asia"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-160, 70], [-50, 70], [-60, 10], [-120, 30], [-160, 70]]]}, "properties": {"name": "North America"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-80, 10], [-35, -5], [-50, -55], [-80, -5], [-80, 10]]]}, "properties": {"name": "South America"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[110, -10], [155, -10], [150, -40], [115, -35], [110, -10]]]}, "properties": {"name": "Australia"}}]};
-    
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const svg = d3.select("#canvas");
-    const g = svg.append("g");
-    const analysisView = document.getElementById("analysis-view");
-    
-    const zoom = d3.zoom().scaleExtent([0.05, 5]).on("zoom", (e) => g.attr("transform", e.transform));
-    svg.call(zoom);
+/* ================================
+   DATA (unchanged from your app)
+   ================================ */
+const data = {"ANTEDILUVIAN":{"parent":"Root","coords":[31.0,46.0],"deities":{"Primordial":["Abzu","Deep Space / Void","Fresh Water Abyss","Sum: Ab (Water) + Zu (Deep)"],"Titan":["THE WATCHERS","Fallen Stars","Book of Enoch: Grigori","Heb: Iyr (Wakeful Ones)"],"Father":["ANU","The Heavens","Horned Cap","Sum: An (Sky/High)"],"Prince":["ENLIL","The Storm","Tablet of Destinies","Sum: En (Lord) + Lil (Wind)"],"War":["NINURTA","Saturn","The Hunter / Net","Sum: Nin (Lord) + Urta (Barley)"],"Wisdom":["Enki","Mercury","DNA / Serpent","Sum: En (Lord) + Ki (Earth)"],"Mother":["Nammu","Sea","Mother Goddess","Sum: Ama (Mother)"],"Love":["-","-","-","-"],"Sun":["-","-","-","-"],"Death":["-","-","-","-"],"Sea":["-","-","-","-"],"Moon":["-","-","-","-"],"Fertility":["-","-","-","-"]}},"SUMERIAN":{"parent":"ANTEDILUVIAN","coords":[31.5,45.5],"deities":{"Father":["ANU","Heaven","Bull / High Judge","Proto-Semitic: *Antu"],"Prince":["ENLIL","Storm","Wind / Command","Lord of the Air"],"War":["NINURTA","Saturn","Double-Eagle","Lord of the Plough"],"Love":["Inanna","Venus Star","Lion / 8-Pt Star","Nin-An-Na (Lady of Heaven)"],"Wisdom":["Enki","Mercury","Goat-Fish","Lord of the Earth"],"Sun":["Utu","Sunday","Saw-Knife","Akk: Shamash (Sun)"],"Death":["Ereshkigal","Underworld","Lapis Lazuli","Lady of Great Earth"],"Mother":["Ninhursag","Mountain","Womb Goddess","Lady of Sacred Mountain"],"Sea":["Enki","Abzu","Fresh Water","The Watery Deep"],"Moon":["Nanna","Monday","Crescent Boat","Lord of Wisdom"],"Fertility":["Damuzi","Shepherd","Dying God","Dumuzid (Faithful Son)"],"Primordial":["Nammu","Sea","Primeval Mother","Root of Tiamat"],"Titan":["Anu","Sky","Dome","High One"]}},"BABYLONIAN":{"parent":"SUMERIAN","coords":[32.5,44.4],"deities":{"Father":["EA / ENLIL","Old Gods","Water Pot","Lord of Deep"],"Prince":["MARDUK","Thursday","Dragon Slayer","Amar-Utu (Calf of Sun)"],"War":["NERGAL","Tuesday","Lion-Man","Lord of the Grave"],"Love":["Ishtar","Friday","Lion / Star","Cognate: Astarte"],"Wisdom":["Nabu","Wednesday","Stylus / Tablet","Root: Nb (To Prophesy)"],"Sun":["Shamash","Sunday","Solar Disk","Root: *Sms (Sun)"],"Death":["Nergal","Grave","Plague","Lord of Transformation"],"Mother":["Sarpanit","Seed","Birth","Zer-Banitu (Creator of Seed)"],"Sea":["Ea","Deep","Fish-Man","House of Water"],"Moon":["Sin","Monday","Lamp","Su-En (Lord of Knowledge)"],"Fertility":["Tammuz","Spring","Shepherd","Dumuzi Derivative"],"Primordial":["Apsu","Fresh Water","Aquifer","Father Deep"],"Titan":["Tiamat","Salt Water","Chaos Dragon","Sea"]}},"ASSYRIAN":{"parent":"BABYLONIAN","coords":[36.3,43.1],"deities":{"Father":["ANU","Sky","Heavens","The High One"],"Prince":["ASHUR","The Disk","Archer","A\u0161\u0161ur (To be Happy)"],"War":["NINURTA","Saturn","Storm Bird","Champion of Enlil"],"Love":["Ishtar","Friday","Lioness","Issar (Assyrian form)"],"Wisdom":["Ea","Sage","Magic","Lord of Wisdom"],"Sun":["Shamash","Sunday","Eye","Judge of Heaven"],"Death":["Nergal","Tomb","Burner","Ruler of the Dead"],"Mother":["Mullissu","Queen","Throne","Nin-Lil (Lady Air)"],"Sea":["Ea","Water","Purification","Source of Rivers"],"Moon":["Sin","Monday","Crescent","Wise Lord"],"Fertility":["Tammuz","Crops","Grain","Life of Earth"],"Primordial":["-","-","-","-"],"Titan":["Tiamat","Dragon","Chaos","Deep"]}},"ZOROASTRIAN":{"parent":"ASSYRIAN","coords":[30.0,53.0],"deities":{"Father":["AHURA MAZDA","Wisdom","Spirit / Fire","Ahura (Lord) + Mazda"],"Prince":["MITHRA","Covenant","Light / Oath","Root: *Mi- (To Bind)"],"War":["VERETHRAGNA","Victory","Boar","Verethra (Obstacle)"],"Love":["Spenta Armaiti","Devotion","Earth","Holy Devotion"],"Wisdom":["Vohu Manah","Good Mind","Intelligence","Good Thought"],"Sun":["Mithra","Sun","Chariot","The Light"],"Death":["Ahriman","Darkness","Destruction","Angra Mainyu"],"Mother":["Anahita","Water","Purity","The Immaculate One"],"Sea":["Apam Napat","Waters","Grandson","Child of Waters"],"Moon":["Mah","Monday","Moon","PIE: *MeHns"],"Fertility":["Anahita","River","Life","The Moist One"],"Primordial":["Zurvan","Time","Infinite Time","Zurvan"],"Titan":["-","-","-","-"]}},"EGYPTIAN":{"parent":"SUMERIAN","coords":[26.8,30.8],"deities":{"Father":["AMUN-RA","Hidden","Ram / Goose","Imn (Hidden) + R\ua725"],"Prince":["HORUS","Rising Sun","Falcon","\u1e24r (The Distant One)"],"War":["SEKHMET","Red Star","Lioness","S\u1e2bm (Power)"],"Love":["Hathor","Venus","Cow / Mirror","\u1e24wt-\u1e24r (House of Horus)"],"Wisdom":["Thoth","Wednesday","Ibis","D\u1e25wty (He of Ibis)"],"Sun":["Ra","Sunday","Barque","R\ua725 (Sun)"],"Death":["Osiris","Judge","Crook & Flail","Wsjr (Powerful?)"],"Mother":["Isis","Throne","Magic Knot","\ua722st (Throne)"],"Sea":["Sobek","Nile","Crocodile","Sbk (Uniter)"],"Moon":["Khonsu","Monday","Disk","Khnsw (Traveller)"],"Fertility":["Geb","Earth","Goose","Gb (Earth)"],"Primordial":["Nun","Void","Dark Waters","Nnw"],"Titan":["Atum","Setting Sun","Self-Created","Tm"]}},"YORUBA":{"parent":"EGYPTIAN","coords":[7.8,5.0],"deities":{"Father":["OLORUN","Sky Owner","Breath","Oni (Owner) + Orun"],"Prince":["SHANGO","Thursday","Double Axe","Striker?"],"War":["OGUN","Tuesday","Iron / Machete","Ogun (War)"],"Love":["Oshun","Venus","Brass / River","Source?"],"Wisdom":["Orunmila","Fate","Divination","Heaven Knows Salvation"],"Sun":["Olorun","Day","The Sun itself","Sun Owner"],"Death":["Iku","Death","Club","Death Personified"],"Mother":["Yemaya","Mother","7 Skirts","Mother of Fish"],"Sea":["Olokun","Ocean","Deep Sea","Owner of Ocean"],"Moon":["Oshu","Month","Moon","Month/Moon"],"Fertility":["Oya","Niger","Wind","She Who Tears"],"Primordial":["-","-","-","-"],"Titan":["Olodumare","Source","Supreme","Owner"]}},"HAITIAN":{"parent":"YORUBA","coords":[18.9,-72.2],"deities":{"Father":["BON DIEU","Sky","High God","Good God"],"Prince":["DAMBALLAH","Serpent","White Snake","Dahomey: Dan"],"War":["OGOUN","Iron","Red / Rum","From Yoruba Ogun"],"Love":["Erzulie","Pink","Jewelry","Ezili (Goddess)"],"Wisdom":["Papa Legba","Crossroads","Keys","Yoruba: Elegba"],"Sun":["Legba","Sun","Old Man","Solar Aspect"],"Death":["Baron Samedi","Grave","Top Hat","Fr: Samedi (Sat)"],"Mother":["Ezili Dantor","Protector","Scars","Black Madonna"],"Sea":["Agwe","Sea","Boat","Sovereign of Seas"],"Fertility":["Ayida-Weddo","Rainbow","Snake","Rainbow Serpent"],"Primordial":["-","-","-","-"],"Titan":["Bondye","Good God","Remote","Bon Dieu"]}},"CANAANITE":{"parent":"SUMERIAN","coords":[32.0,35.0],"deities":{"Father":["EL","Saturn","Father of Years","The Father"],"Prince":["BAAL","Thursday","Club / Storm","Ba\u02bfl (Master)"],"War":["ANAT","Tuesday","Virgin Warrior","\u02bfnt (Answer?)"],"Love":["Astarte","Friday","Star","\u02bf\u1e6ftrt (Venus)"],"Wisdom":["Kothar","Craft","Smith","Skillful"],"Sun":["Shapash","Sun","Torch","\u0160p\u0161 (Sun)"],"Death":["Mot","Drought","Swallower","Mwt (Death)"],"Mother":["Asherah","Sea Lady","Tree","She who treads sea"],"Sea":["Yam","Sea","Serpent","Ym (Sea)"],"Moon":["Yarikh","Moon","City","Yr\u1e2b (Moon)"],"Fertility":["Dagon","Grain","Fish/Grain","Dgn (Grain)"],"Primordial":["Chaos","-","-","-"],"Titan":["El","Saturn","Bull","God"]}},"PHOENICIAN":{"parent":"CANAANITE","coords":[33.5,35.3],"deities":{"Father":["BAAL SHAMEM","Heavens","Lord of Sky","Lord of Heavens"],"Prince":["MELQART","Hercules","Lion Skin","King of City"],"War":["RESHEPH","Mars","Gazelle","R\u0161p (Flame)"],"Love":["Astarte","Friday","Sphinx","Lady"],"Wisdom":["Eshmun","Healing","Serpent","\u0160mn (Oil)"],"Sun":["Baal Hammon","Solar","Ram","Lord of Brazier"],"Death":["Mot","Death","Heat","Death"],"Mother":["Tanit","Lady","Triangle","Serpent Lady?"],"Sea":["Yam","Waves","Judge","Sea"],"Moon":["Yarikh","Lunar","Sickle","Moon"],"Fertility":["Eshmun","Spring","Pomegranate","Healer"],"Primordial":["-","-","-","-"],"Titan":["El","Saturn","Chronos","God"]}},"HINDU":{"parent":"SUMERIAN","coords":[20.5,78.9],"deities":{"Father":["BRAHMA","Creator","4 Faces","Brh (Expand)"],"Prince":["INDRA","Thursday","Vajra","Indu (Drop)"],"War":["KARTIKEYA","Tuesday","Peacock","Pleiades"],"Love":["Lakshmi","Friday","Lotus","Lakshya (Goal)"],"Wisdom":["Budha","Wednesday","Merchant","Budh (Awake)"],"Sun":["Surya","Sunday","7 Horses","Svar (Shine)"],"Death":["Yama","Judge","Noose","Twin/Restrainer"],"Mother":["Durga","Power","Tiger","Fortress"],"Sea":["Varuna","Ocean","Makara","Var (Cover)"],"Moon":["Chandra","Monday","Antelope","Chand (Shine)"],"Fertility":["Prithvi","Earth","Cow","The Vast One"],"Primordial":["Aditi","Infinity","Mother","Unbound"],"Titan":["Dyaus Pita","Sky Father","Bull","Dyaus + Pita"]}},"GREEK":{"parent":"HINDU","coords":[39.0,22.0],"deities":{"Father":["CRONUS","Saturn","Golden Age","Titan King"],"Prince":["ZEUS","Thursday","Lightning","PIE: *Dyeus"],"War":["ARES","Tuesday","Spear","Are (Bane)"],"Love":["Aphrodite","Friday","Shell","Aphros (Foam)"],"Wisdom":["Hermes","Wednesday","Caduceus","Herma (Stones)"],"Sun":["Apollo","Sunday","Lyre","Destroyer?"],"Death":["Hades","Unseen","Bident","Unseen One"],"Mother":["Hera","Queen","Peacock","Protector"],"Sea":["Poseidon","Earthshaker","Trident","Lord + Earth"],"Moon":["Selene","Monday","Chariot","Selas (Light)"],"Fertility":["Demeter","Harvest","Wheat","Earth Mother"],"Primordial":["Chaos","Void","Gap","Khaos"],"Titan":["Cronus","Saturday","Sickle","Ker"]}},"ROMAN":{"parent":"GREEK","coords":[41.9,12.5],"deities":{"Father":["SATURN","Saturday","Old King","God of Seeds"],"Prince":["JUPITER","Thursday","Eagle","Iou-Pater"],"War":["MARS","Tuesday","Wolf","Mavors"],"Love":["Venus","Friday","Rose","Venes (Desire)"],"Wisdom":["Mercury","Wednesday","Coin","Merchandise"],"Sun":["Sol","Sunday","Crown","PIE: *Sawel"],"Death":["Pluto","Wealth","Keys","Ploutos (Wealth)"],"Mother":["Juno","Queen","Goat","Iuvenis (Youth)"],"Sea":["Neptune","Sea","Trident","Nebh (Damp)"],"Moon":["Luna","Monday","Crescent","Lucna (Shiner)"],"Fertility":["Ceres","Grain","Sheaf","Ker (Grow)"],"Primordial":["Chaos","-","-","-"],"Titan":["Saturn","Saturday","Scythe","Sowing"]}},"NORSE":{"parent":"ROMAN","coords":[60.4,8.4],"deities":{"Father":["ODIN","Wednesday","One Eye","Wotan (Fury)"],"Prince":["THOR","Thursday","Hammer","Thunder"],"War":["TYR","Tuesday","Hand","Tiwaz (God)"],"Love":["Freyja","Friday","Falcon","Prauja (Lady)"],"Wisdom":["Mimir","Well","Head","Mim (Memory)"],"Sun":["Sunna","Sunday","Shield","Sunnon"],"Death":["Hel","Underworld","Half-Corpse","Concealed"],"Mother":["Frigg","Queen","Distaff","Beloved"],"Sea":["Njord","Ship","Vanir","Nerthuz"],"Moon":["Mani","Monday","Moon","Meno (Moon)"],"Fertility":["Frey","Phallic","Boar","Praujaz (Lord)"],"Primordial":["Ginnungagap","Void","Magic Void","Gap"],"Titan":["Ymir","Giant","Ice","Twin"]}},"CELTIC":{"parent":"NORSE","coords":[53.4,-7.0],"deities":{"Father":["THE DAGDA","All-Father","Club","Good God"],"Prince":["LUGH","Light","Spear","Leuk (Light)"],"War":["MORRIGAN","Battle","Crow","Terror Queen"],"Love":["Aengus Og","Youth","Birds","One Strength"],"Wisdom":["Ogma","Words","Ogham","Ogmos (Track)"],"Sun":["Lugh","Lammas","Harvest","Shining One"],"Death":["Donn","Dark One","Red Rider","Dark/Brown"],"Mother":["Danu","River","Breasts","Flowing Water"],"Sea":["Manannan","Ocean","Mist","Ireland/Water"],"Moon":["Arianrhod","Wheel","Silver","Silver Wheel"],"Fertility":["Brigid","Spring","Fire","High One"],"Primordial":["-","-","-","-"],"Titan":["Danu","Waters","Mother","River"]}},"DRUID":{"parent":"CELTIC","coords":[46.2,2.2],"deities":{"Father":["TARANIS","Thunder","Wheel","Taran (Thunder)"],"Prince":["TOUTATIS","Tribe","Protector","Teuta (Tribe)"],"War":["CAMULUS","War","Sword","Camulo (Champion)"],"Love":["Sirona","Star","Snake","Ster (Star)"],"Wisdom":["Ogmios","Eloquence","Chains","Leading"],"Sun":["Belenus","Bright","Horse","Bel (Bright)"],"Death":["Dis Pater","Father","Ancestor","Rich Father"],"Mother":["Rosmerta","Plenty","Cornucopia","Provider"],"Sea":["Sequana","Seine","Duck","Fast Flowing"],"Moon":["-","-","-","-"],"Fertility":["Cernunnos","Horned","Stag","Karnon (Horn)"],"Primordial":["-","-","-","-"],"Titan":["-","-","-","-"]}},"CHINESE":{"parent":"HINDU","coords":[35.8,104.1],"deities":{"Father":["JADE EMPEROR","Polestar","Tablet","Yu Huang"],"Prince":["ERLANG SHEN","Nephew","3rd Eye","Second Son"],"War":["GUAN YU","Mars","Guan Dao","Lord Guan"],"Love":["Chang'e","Moon","Rabbit","Beautiful Lady"],"Wisdom":["Laozi","Dao","Scroll","Old Master"],"Sun":["Xihe","Sun","Charioteer","Breath Harmony"],"Death":["Yanluo Wang","Judge","Book","King Yama"],"Mother":["Xi Wangmu","Queen","Peaches","Queen Mother"],"Sea":["Dragon King","East Sea","Dragon","Long Wang"],"Moon":["Chang'e","Monday","Elixir","Moon Goddess"],"Fertility":["Hou Tu","Earth","Soil","Queen Earth"],"Primordial":["Wuji","Void","Limitless","No Ridgepole"],"Titan":["Pangu","Giant","Cosmic Egg","Antiquity"]}},"JAPANESE":{"parent":"CHINESE","coords":[36.2,138.2],"deities":{"Father":["IZANAGI","Father","Spear","First Male"],"Prince":["SUSANOO","Storm","Sword","Impetuous"],"War":["HACHIMAN","Arrow","Bow","God 8 Banners"],"Love":["Uzume","Dawn","Dance","Whirling"],"Wisdom":["Tenjin","Scholar","Plum","Heavenly"],"Sun":["Amaterasu","Sun","Mirror","Shining"],"Death":["Izanami","Yomi","Decay","She Who Invites"],"Mother":["Izanami","Mother","Creation","First Female"],"Sea":["Ryujin","Dragon","Jewels","Dragon God"],"Moon":["Tsukuyomi","Moon","Mirror","Moon Reading"],"Fertility":["Inari","Fox","Rice","Carrying Rice"],"Primordial":["Chaos","-","Egg","Konton"],"Titan":["Izanagi","Creator","Spear","He Who Invites"]}},"AZTEC":{"parent":"CHINESE","coords":[19.4,-99.1],"deities":{"Father":["OMETEOTL","Two","Duality","Lord Duality"],"Prince":["HUITZILOPOCHTLI","Sun/War","Hummingbird","Left-Hand Hummingbird"],"War":["HUITZILOPOCHTLI","Mars","Blue Skin","Warrior"],"Love":["Xochiquetzal","Flower","Butterfly","Precious Flower"],"Wisdom":["Quetzalcoatl","Venus","Wind","Feathered Serpent"],"Sun":["Tonatiuh","Disk","Calendar","Goes Forth"],"Death":["Mictlantecuhtli","Bone","Skeleton","Lord Mictlan"],"Mother":["Coatlicue","Skirt","Snakes","Serpent Skirt"],"Sea":["Chalchiuhtlicue","Jade","Water Skirt","Jade Skirt"],"Moon":["Coyolxauhqui","Moon","Bells","Painted Bells"],"Fertility":["Tlaloc","Rain","Fangs","Makes Sprout"],"Primordial":["-","-","-","-"],"Titan":["Ometeotl","Dual","Two-Lord","Two God"]}},"ALGONQUIAN":{"parent":"AZTEC","coords":[45.0,-84.0],"deities":{"Father":["GREAT SPIRIT","Creator","Invisible","Kitchi-Manitou"],"Prince":["MANITOU","Spirit","Life Force","Mystery"],"War":["HIAWATHA","Hero","Peacemaker","Makes Rivers"],"Love":["-","-","-","-"],"Wisdom":["Gluskap","Teacher","Stone Canoe","Good Man"],"Sun":["Grandfather","Sun","Day Maker","Sun Spirit"],"Death":["-","-","-","-"],"Mother":["Nokomis","Grandmother","Earth","Grandmother"],"Sea":["Great Water","Ocean","Whale","Big Water"],"Moon":["Grandmother","Moon","Night Sun","Moon Spirit"],"Fertility":["Earth Mother","Earth","Harvest","Mother Earth"],"Primordial":["-","-","-","-"],"Titan":["-","-","-","-"]}},"POLYNESIAN":{"parent":"HINDU","coords":[-15.0,-140.0],"deities":{"Father":["RANGI","Sky","Lover","Sky Father"],"Prince":["TANE","Forest","Trees","Man/Male"],"War":["TU","War","Grimace","Angry Face"],"Love":["Hina","Moon","Tapa","Girl/White"],"Wisdom":["Maui","Trickster","Fishhook","Culture Hero"],"Sun":["Tama-nui-te-ra","Sun","Snare","Great Son"],"Death":["Hine-nui-te-po","Night","Obsidian","Woman of Night"],"Mother":["Papa","Earth","Soil","Flat Surface"],"Sea":["Tangaroa","Ocean","Fish","God of Sea"],"Moon":["Marama","Moon","Fan","Moon"],"Fertility":["Rongo","Peace","Potato","Peace/Sound"],"Primordial":["Po","Darkness","Night","Void"],"Titan":["Papa","Earth","Mother","Foundation"]}},"HAWAIIAN":{"parent":"POLYNESIAN","coords":[19.8,-155.5],"deities":{"Father":["KANE","Life","Sunlight","Man/Male"],"Prince":["LONO","Peace","Clouds","News/Sound"],"War":["KU","War","Snatcher","Upright"],"Love":["Laka","Hula","Maile","Tame/Gentle"],"Wisdom":["Lono","Peace","Fertility","Agriculture"],"Sun":["Kane","Sun","East","Leading Star"],"Death":["Milu","Underworld","Darkness","Lord of Dead"],"Mother":["Haumea","Birth","Breadfruit","Birth Goddess"],"Sea":["Kanaloa","Ocean","Squid","Secure/Firm"],"Moon":["Mahina","Moon","Kapa","Moon"],"Fertility":["Hina","Moon","Coral","White"],"Primordial":["-","-","-","-"],"Titan":["-","-","-","-"]}}};
 
-    const colors = {
-        'Father': '#FFD700', 'Prince': '#00BFFF', 'War': '#C0C0C0', 
-        'Love': '#FF69B4', 'Wisdom': '#90EE90', 'Sun': '#FFA500', 
-        'Mother': '#FF1493', 'Sea': '#00FFFF', 'Death': '#9370DB',
-        'Moon': '#B0E0E6', 'Fertility': '#7CFC00', 'Titan': '#8B0000', 'Primordial': '#777'
-    };
-    
-    let currentMode = 'tree';
-    renderTree();
+// ===== MAP UI STATE + ELEMENTS =====
+const tooltip = document.getElementById("tooltip");
+const drawer = document.getElementById("detail-drawer");
+const ddTitle = document.getElementById("dd-title");
+const ddBody = document.getElementById("dd-body");
+document.getElementById("dd-close").addEventListener("click", closeDrawer);
 
-    function switchMode(mode) {
-        currentMode = mode;
-        d3.selectAll("button").classed("active", false);
-        d3.select("#btn-" + mode).classed("active", true);
-        
-        // Handle Analysis View Toggle
-        if (mode === 'analysis') {
-            svg.style("display", "none");
-            analysisView.style.display = "block";
-        } else {
-            svg.style("display", "block");
-            analysisView.style.display = "none";
-            g.selectAll("*").remove();
-            
-            if(mode === 'tree') renderTree();
-            else if(mode === 'cols') renderColumns();
-            else renderMap();
-        }
+const mapTools = document.getElementById("map-tools");
+const uiMap = {
+  showLines: true,
+  showBorders: true,
+  showGraticule: false,
+  showLabels: true,
+};
+
+// Fallback basemap (keeps the map usable when running from file:// or when CDNs are blocked)
+// NOTE: these are intentionally low-detail, "chart-like" shapes (not a political map).
+const FALLBACK_LAND = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "North America (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [-168,72],[-150,70],[-135,72],[-120,72],[-105,75],[-90,72],[-75,60],[-62,52],[-55,45],
+        [-60,38],[-70,32],[-80,25],[-92,18],[-105,20],[-115,28],[-125,40],[-135,50],[-150,60],[-168,72]
+      ]]}
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "South America (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [-82,12],[-76,9],[-72,7],[-68,5],[-62,2],[-56,-3],[-50,-12],[-48,-20],[-50,-28],[-54,-35],
+        [-60,-44],[-66,-52],[-72,-54],[-78,-48],[-82,-38],[-84,-25],[-82,-10],[-82,12]
+      ]]}
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Africa (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [-17,37],[-6,35],[10,37],[25,33],[35,31],[43,20],[50,10],[51,2],[48,-10],[44,-20],[36,-33],
+        [18,-35],[5,-34],[-5,-30],[-12,-15],[-17,5],[-15,20],[-17,37]
+      ]]}
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Eurasia (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [-10,36],[-5,43],[10,50],[25,55],[40,60],[60,65],[80,70],[110,70],[140,60],[160,55],[170,50],
+        [150,45],[130,35],[110,25],[90,20],[70,25],[60,20],[50,15],[40,12],[30,10],[25,5],[20,0],
+        [10,5],[5,10],[0,15],[-5,25],[-10,36]
+      ]]}
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Australia (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [112,-11],[114,-22],[120,-30],[130,-33],[142,-38],[153,-28],[151,-18],[144,-11],[132,-12],[122,-14],[112,-11]
+      ]]}
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Antarctica (schematic)" },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [-180,-60],[-120,-72],[-60,-76],[0,-78],[60,-76],[120,-72],[180,-60],[180,-90],[-180,-90],[-180,-60]
+      ]]}
+    }
+  ]
+};
+
+const FALLBACK_BORDERS = null;
+
+
+
+document.getElementById("toggle-lines").addEventListener("change", (e) => { uiMap.showLines = e.target.checked; if (currentMode === "map") renderMap(); });
+document.getElementById("toggle-borders").addEventListener("change", (e) => { uiMap.showBorders = e.target.checked; if (currentMode === "map") renderMap(); });
+document.getElementById("toggle-graticule").addEventListener("change", (e) => { uiMap.showGraticule = e.target.checked; if (currentMode === "map") renderMap(); });
+document.getElementById("toggle-labels").addEventListener("change", (e) => {
+  uiMap.showLabels = e.target.checked;
+  g.selectAll(".pin-label").style("display", uiMap.showLabels ? null : "none");
+});
+
+document.getElementById("map-search").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  const q = (e.target.value || "").trim().toUpperCase();
+  if (!q) return;
+  if (!data[q]) {
+    flashTooltip(`No match: <b>${escapeHtml(q)}</b>`, e.target.getBoundingClientRect().left + 20, e.target.getBoundingClientRect().bottom + 10);
+    return;
+  }
+  flyToCulture(q);
+});
+
+function showMapTools(show) {
+  mapTools.style.display = show ? "block" : "none";
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function flashTooltip(html, x, y) {
+  tooltip.innerHTML = `<div class="tt-row">${html}</div>`;
+  tooltip.style.left = `${x}px`;
+  tooltip.style.top = `${y}px`;
+  tooltip.style.display = "block";
+  setTimeout(() => { tooltip.style.display = "none"; }, 1300);
+}
+
+function openDrawer(cultureKey) {
+  const roles = ['Primordial','Titan','Father','Prince','War','Love','Wisdom','Sun','Death','Mother','Sea','Moon','Fertility'];
+  const details = (data[cultureKey] && data[cultureKey].deities) ? data[cultureKey].deities : {};
+  ddTitle.textContent = cultureKey;
+
+  let html = `<table class="dd-table">
+    <thead>
+      <tr><th style="width:110px;">Role</th><th>Name</th></tr>
+    </thead><tbody>`;
+
+  roles.forEach(role => {
+    const info = details[role] || ['-','-','-','-'];
+    const roleColor = colors[role] || "#888";
+    html += `
+      <tr>
+        <td class="dd-role" style="color:${roleColor}">${escapeHtml(role)}</td>
+        <td>
+          <div class="dd-name">${escapeHtml(info[0] || "-")}</div>
+          <div class="dd-meta">
+            <div><b>Ling:</b> ${escapeHtml(info[1] || "-")}</div>
+            <div><b>Func:</b> ${escapeHtml(info[2] || "-")}</div>
+            <div><b>Et:</b> ${escapeHtml(info[3] || "-")}</div>
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  ddBody.innerHTML = html;
+
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeDrawer() {
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+}
+
+// ===== IMPROVED MAP RENDERER (real basemap + professional styling) =====
+async function renderMap() {
+  // wipe canvas group
+  g.selectAll("*").remove();
+  showMapTools(true);
+
+  // defs (gradients) — re-add each render for reliability
+  const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
+  defs.selectAll("*").remove();
+
+  const ocean = defs.append("radialGradient")
+    .attr("id", "oceanGrad")
+    .attr("cx", "50%").attr("cy", "45%").attr("r", "70%");
+  ocean.append("stop").attr("offset", "0%").attr("stop-color", "#0b1220");
+  ocean.append("stop").attr("offset", "55%").attr("stop-color", "#070b12");
+  ocean.append("stop").attr("offset", "100%").attr("stop-color", "#050507");
+
+  const vignette = defs.append("radialGradient")
+    .attr("id", "vignetteGrad")
+    .attr("cx", "50%").attr("cy", "50%").attr("r", "75%");
+  vignette.append("stop").attr("offset", "55%").attr("stop-color", "rgba(0,0,0,0)");
+  vignette.append("stop").attr("offset", "100%").attr("stop-color", "rgba(0,0,0,0.85)");
+
+  // Real world basemap
+    let land = null;
+    let borders = null;
+    let basemapLabel = "Natural Earth (online)";
+  
+    try {
+      const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+      if (typeof topojson === "undefined") throw new Error("topojson-client not loaded");
+      land = topojson.feature(world, world.objects.land);
+      borders = topojson.mesh(world, world.objects.countries, (a, b) => a !== b);
+    } catch (err) {
+      land = FALLBACK_LAND;
+      borders = FALLBACK_BORDERS;
+      basemapLabel = "Mythic fallback (offline/blocked)";
+      console.warn("Basemap unavailable; using fallback:", err);
     }
 
-    // --- RENDER TREE ---
-    function renderTree() {
-        const nodeMap = {};
-        let rootNode = null;
-        for (const [key, val] of Object.entries(data)) nodeMap[key] = { name: key, details: val.deities, children: [] };
-        for (const [key, val] of Object.entries(data)) {
-            if (val.parent === 'Root') rootNode = nodeMap[key];
-            else if (nodeMap[val.parent]) nodeMap[val.parent].children.push(nodeMap[key]);
+// Build projection to fit, leaving space for left controls + right drawer
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  svg.attr("width", W).attr("height", H);
+
+  const leftPad = 320;       // controls width area
+  const rightPad = 40;       // drawer is overlay; we still keep a margin
+  const topPad = 30;
+  const bottomPad = 30;
+
+  const projection = d3.geoNaturalEarth1();
+  projection.fitExtent([[leftPad, topPad], [W - rightPad, H - bottomPad]], land);
+
+  const path = d3.geoPath(projection);
+
+  const mapLayer = g.append("g").attr("class", "map-layer");
+
+  // ocean backdrop
+  mapLayer.append("rect")
+    .attr("x", 0).attr("y", 0)
+    .attr("width", W).attr("height", H)
+    .attr("fill", "url(#oceanGrad)");
+
+  // optional graticule
+  if (uiMap.showGraticule) {
+    mapLayer.append("path")
+      .datum(d3.geoGraticule10())
+      .attr("class", "graticule")
+      .attr("d", path);
+  }
+
+  // land + borders
+  mapLayer.append("path")
+    .datum(land)
+    .attr("class", "land")
+    .attr("d", path);
+
+  if (uiMap.showBorders && borders) {
+    mapLayer.append("path")
+      .datum(borders)
+      .attr("class", "borders")
+      .attr("d", path);
+  }
+
+  // lineage arcs (great-circle) for parent links
+  const arcsLayer = mapLayer.append("g").attr("class", "arcs");
+  if (uiMap.showLines) {
+    const arcLine = d3.line().curve(d3.curveBasis);
+    for (const [key, val] of Object.entries(data)) {
+      if (!val.parent || val.parent === "Root" || !data[val.parent]) continue;
+
+      const a = [val.coords[1], val.coords[0]];            // [lon, lat]
+      const b = [data[val.parent].coords[1], data[val.parent].coords[0]];
+
+      const interp = d3.geoInterpolate(a, b);
+      const pts = d3.range(0, 1.00001, 1 / 56).map(t => projection(interp(t)));
+
+      arcsLayer.append("path")
+        .attr("class", "lineage")
+        .attr("d", arcLine(pts))
+        .attr("opacity", 0.85);
+    }
+  }
+
+  // pins + labels
+  const pins = Object.entries(data).map(([key, val]) => ({
+    key,
+    lon: val.coords[1],
+    lat: val.coords[0],
+    parent: val.parent
+  }));
+
+  const pinLayer = mapLayer.append("g").attr("class", "pins");
+
+  const pinG = pinLayer.selectAll("g.pin")
+    .data(pins, d => d.key)
+    .enter()
+    .append("g")
+    .attr("class", "pin")
+    .attr("transform", d => {
+      const p = projection([d.lon, d.lat]);
+      return `translate(${p[0]},${p[1]})`;
+    })
+    .style("cursor", "pointer")
+    .on("pointerenter", (e, d) => {
+      const cult = d.key;
+      const prince = (data[cult]?.deities?.Prince?.[0]) || "-";
+      const father = (data[cult]?.deities?.Father?.[0]) || "-";
+      tooltip.innerHTML = `
+        <div class="tt-title">${escapeHtml(cult)}</div>
+        <div class="tt-row"><b>Father:</b> ${escapeHtml(father)}</div>
+        <div class="tt-row"><b>Prince:</b> ${escapeHtml(prince)}</div>
+        <div class="tt-row"><b>Parent:</b> ${escapeHtml(d.parent || "-")}</div>
+        <div class="tt-row" style="color:#9aa3b2; font-size:11px; margin-top:6px;">Click for full role table</div>
+      `;
+      tooltip.style.display = "block";
+    })
+    .on("pointermove", (e) => {
+      tooltip.style.left = `${e.pageX + 14}px`;
+      tooltip.style.top = `${e.pageY + 14}px`;
+    })
+    .on("pointerleave", () => { tooltip.style.display = "none"; })
+    .on("click", (e, d) => { openDrawer(d.key); });
+
+  // halo + core
+  pinG.append("circle").attr("class", "pin-halo").attr("r", 10);
+  pinG.append("circle").attr("class", "pin-core").attr("r", 4.2);
+
+  // label
+  pinG.append("text")
+    .attr("class", "pin-label")
+    .attr("y", -14)
+    .attr("text-anchor", "middle")
+    .text(d => d.key)
+    .style("display", uiMap.showLabels ? null : "none");
+
+  // vignette overlay for depth
+  mapLayer.append("rect")
+    .attr("class", "map-vignette")
+    .attr("x", 0).attr("y", 0)
+    .attr("width", W).attr("height", H);
+
+  // initial view
+  svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
+
+  // make strokes/pins scale intelligently with zoom (professional feel)
+  function applyZoomStyling(k) {
+    mapLayer.selectAll(".borders").style("stroke-width", `${0.9 / k}px`);
+    mapLayer.selectAll(".graticule").style("stroke-width", `${0.8 / k}px`);
+    mapLayer.selectAll(".lineage").style("stroke-width", `${2.2 / k}px`);
+    pinLayer.selectAll(".pin-core").attr("r", 4.2 / Math.sqrt(k));
+    pinLayer.selectAll(".pin-halo").attr("r", 10 / Math.sqrt(k));
+    pinLayer.selectAll(".pin-label").style("font-size", `${11 / Math.sqrt(k)}px`);
+  }
+
+  // attach a map-aware zoom hook without breaking other modes
+  // (your existing zoom keeps working; we layer styling updates)
+  const baseZoomHandler = zoom.on("zoom");
+  zoom.on("zoom", (e) => {
+    if (baseZoomHandler) baseZoomHandler(e);
+    if (currentMode === "map") applyZoomStyling(e.transform.k);
+  });
+}
+
+// Optional: “fly to” when searching
+function flyToCulture(key) {
+  const val = data[key];
+  if (!val) return;
+  const lon = val.coords[1], lat = val.coords[0];
+
+  // to compute a target transform, we need the same projection used in renderMap
+  // easiest approach: re-render map (it rebuilds projection) then zoom to it
+  renderMap().then(() => {
+    // find the pin element and center on its current screen location
+    const pin = g.selectAll("g.pin").filter(d => d.key === key).node();
+    if (!pin) return;
+    const pt = pin.getCTM();
+    if (!pt) return;
+
+    const W = window.innerWidth, H = window.innerHeight;
+    const x = pt.e, y = pt.f;
+
+    const targetK = 2.0;
+    const t = d3.zoomIdentity
+      .translate(W / 2 - x * targetK, H / 2 - y * targetK)
+      .scale(targetK);
+
+    svg.transition().duration(650).call(zoom.transform, t);
+    openDrawer(key);
+  });
+}
+
+
+/* ================================
+   CONFIG + STATE
+   ================================ */
+const roles = ['Primordial','Titan','Father','Prince','War','Love','Wisdom','Sun','Death','Mother','Sea','Moon','Fertility'];
+
+const colors = {
+  'Father':'#FFD700','Prince':'#00BFFF','War':'#C0C0C0',
+  'Love':'#FF69B4','Wisdom':'#90EE90','Sun':'#FFA500',
+  'Mother':'#FF1493','Sea':'#00FFFF','Death':'#9370DB',
+  'Moon':'#B0E0E6','Fertility':'#7CFC00','Titan':'#8B0000','Primordial':'#777'
+};
+
+const STORAGE_KEY = "myth_codex_deluxe_v1";
+
+const state = {
+  mode: "tree",
+  selectedCulture: null,
+  selectedRole: "",
+  compare: new Set(),
+  collapsed: new Set(),
+  tab: "details",
+  lastTransform: d3.zoomIdentity,
+  searchQuery: ""
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(s && typeof s === "object"){
+      if(s.mode) state.mode = s.mode;
+      if(s.selectedRole !== undefined) state.selectedRole = s.selectedRole;
+      if(Array.isArray(s.compare)) state.compare = new Set(s.compare);
+      if(Array.isArray(s.collapsed)) state.collapsed = new Set(s.collapsed);
+    }
+  }catch(e){}
+}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      mode: state.mode,
+      selectedRole: state.selectedRole,
+      compare: [...state.compare],
+      collapsed: [...state.collapsed]
+    }));
+  }catch(e){}
+}
+
+loadState();
+
+/* ================================
+   DOM + D3 SETUP
+   ================================ */
+const svg = d3.select("#canvas");
+const g = svg.append("g");
+const analysisView = document.getElementById("analysis-view");
+const controls = document.getElementById("controls");
+const ins = document.getElementById("inspector");
+const tip = document.getElementById("tip");
+const toast = document.getElementById("toast");
+
+function showBootMessage(msg){
+  if(!toast) return;
+  toast.textContent = msg;
+  toast.style.display = "block";
+  toast.style.borderColor = "rgba(255,215,0,.35)";
+  toast.style.background = "rgba(15,10,8,.85)";
+  toast.style.backdropFilter = "blur(6px)";
+  toast.style.maxWidth = "520px";
+  toast.style.whiteSpace = "normal";
+  setTimeout(()=>{ try{ toast.style.display = "none"; }catch(_){ } }, 6500);
+}
+
+if (!window.d3){
+  if (toast){
+    toast.textContent = "D3.js did not load (offline / blocked CDN). This page depends on D3. If you opened the file directly, run a local server:  python -m http.server 8000  and open http://localhost:8000/.";
+    toast.style.display = "block";
+    toast.style.borderColor = "rgba(255,85,85,.55)";
+    toast.style.background = "rgba(40,10,10,.85)";
+    toast.style.maxWidth = "560px";
+    toast.style.whiteSpace = "normal";
+  } else {
+    alert("D3.js did not load (offline / blocked CDN).");
+  }
+  throw new Error("D3.js missing");
+}
+
+if (location.protocol === "file:"){
+  showBootMessage("Tip: file:// can block the online basemap. For full map detail, serve the folder locally:  python -m http.server 8000  then open http://localhost:8000/.");
+}
+
+const roleFocus = document.getElementById("roleFocus");
+const searchInput = document.getElementById("search");
+const searchResults = document.getElementById("searchResults");
+const modeLabel = document.getElementById("modeLabel");
+
+let width = window.innerWidth;
+let height = window.innerHeight;
+
+function setSvgSize(){
+  width = window.innerWidth;
+  height = window.innerHeight;
+  svg.attr("width", width).attr("height", height);
+}
+setSvgSize();
+
+const zoom = d3.zoom()
+  .scaleExtent([0.03, 7])
+  .on("zoom", (e) => {
+    state.lastTransform = e.transform;
+    g.attr("transform", e.transform);
+  });
+
+svg.call(zoom);
+
+/* ================================
+   UI: buttons + tabs
+   ================================ */
+const btnTree = document.getElementById("btn-tree");
+const btnCols = document.getElementById("btn-cols");
+const btnMap  = document.getElementById("btn-map");
+const btnAnalysis = document.getElementById("btn-analysis");
+
+const fitBtn = document.getElementById("fitBtn");
+const resetBtn = document.getElementById("resetBtn");
+const exportSvgBtn = document.getElementById("exportSvgBtn");
+const exportPngBtn = document.getElementById("exportPngBtn");
+const exportJsonBtn = document.getElementById("exportJsonBtn");
+const helpBtn = document.getElementById("helpBtn");
+
+const expandAllBtn = document.getElementById("expandAllBtn");
+const collapseAllBtn = document.getElementById("collapseAllBtn");
+const treeTools = document.getElementById("treeTools");
+const analysisTools = document.getElementById("analysisTools");
+
+btnTree.addEventListener("click", ()=>switchMode("tree"));
+btnCols.addEventListener("click", ()=>switchMode("cols"));
+btnMap.addEventListener("click",  ()=>switchMode("map"));
+btnAnalysis.addEventListener("click", ()=>switchMode("analysis"));
+
+fitBtn.addEventListener("click", ()=>fitView());
+resetBtn.addEventListener("click", ()=>resetView());
+
+exportSvgBtn.addEventListener("click", ()=>exportSvg());
+exportPngBtn.addEventListener("click", ()=>exportPng());
+exportJsonBtn.addEventListener("click", ()=>exportJson());
+helpBtn.addEventListener("click", ()=>showHelp());
+
+expandAllBtn.addEventListener("click", ()=>{
+  state.collapsed.clear();
+  saveState();
+  if(state.mode==="tree") renderTree();
+  toastMsg("Expanded all nodes.");
+});
+collapseAllBtn.addEventListener("click", ()=>{
+  // collapse everything except root
+  const keys = Object.keys(data);
+  keys.forEach(k=>{ if(data[k].parent!=="Root") state.collapsed.add(k); });
+  saveState();
+  if(state.mode==="tree") renderTree();
+  toastMsg("Collapsed tree.");
+});
+
+document.querySelectorAll("#analysisTools button[data-scroll]").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    const sel = b.getAttribute("data-scroll");
+    const el = document.querySelector(sel);
+    if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
+  });
+});
+
+document.getElementById("copyBtn").addEventListener("click", ()=>copySelected());
+document.getElementById("clearSelBtn").addEventListener("click", ()=>clearSelection());
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    state.tab = t.getAttribute("data-tab");
+    renderInspector();
+  });
+});
+
+/* ================================
+   ROLE FOCUS + LEGEND
+   ================================ */
+function buildRoleOptions(){
+  roles.forEach(r=>{
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r;
+    roleFocus.appendChild(opt);
+  });
+  roleFocus.value = state.selectedRole || "";
+}
+buildRoleOptions();
+
+roleFocus.addEventListener("change", ()=>{
+  state.selectedRole = roleFocus.value;
+  saveState();
+  applyFocus();
+  renderInspector();
+});
+
+function renderLegend(){
+  const legend = document.getElementById("legend");
+  legend.innerHTML = "";
+  roles.forEach(r=>{
+    const el = document.createElement("div");
+    el.className = "legItem";
+    el.title = "Click to focus: " + r;
+    const sw = document.createElement("div");
+    sw.className="swatch";
+    sw.style.background = colors[r] || "#888";
+    const tx = document.createElement("div");
+    tx.textContent = r;
+    el.appendChild(sw);
+    el.appendChild(tx);
+    el.addEventListener("click", ()=>{
+      roleFocus.value = (roleFocus.value === r ? "" : r);
+      state.selectedRole = roleFocus.value;
+      saveState();
+      applyFocus();
+      renderInspector();
+    });
+    legend.appendChild(el);
+  });
+}
+renderLegend();
+
+/* ================================
+   SEARCH INDEX
+   ================================ */
+const cultures = Object.keys(data);
+
+const searchIndex = [];
+for(const cult of cultures){
+  const details = data[cult].deities || {};
+  for(const role of roles){
+    const info = details[role] || ['-','-','-','-'];
+    // searchable fields
+    const blob = [cult, role, ...info].join(" | ");
+    searchIndex.push({
+      culture: cult,
+      role,
+      info,
+      text: blob.toLowerCase()
+    });
+  }
+}
+
+function normalize(s){ return (s||"").toString().toLowerCase().trim(); }
+
+function renderSearchResults(items){
+  searchResults.innerHTML = "";
+  if(!items.length){
+    searchResults.style.display = "none";
+    return;
+  }
+  searchResults.style.display = "block";
+  for(const it of items){
+    const div = document.createElement("div");
+    div.className = "srItem";
+    const left = document.createElement("div");
+    left.className = "srLeft";
+    const title = document.createElement("div");
+    title.className = "srTitle";
+    title.textContent = it.culture + " • " + it.role;
+    const sub = document.createElement("div");
+    sub.className = "srSub";
+    sub.textContent = (it.info[0] || "-") + " — " + (it.info[1] || "-");
+    left.appendChild(title);
+    left.appendChild(sub);
+    const pill = document.createElement("div");
+    pill.className = "pill";
+    pill.textContent = "jump";
+    div.appendChild(left);
+    div.appendChild(pill);
+
+    div.addEventListener("click", ()=>{
+      searchResults.style.display = "none";
+      searchInput.blur();
+      selectCulture(it.culture, { role: it.role, fromSearch:true });
+      // also set role focus if user picked a role result
+      if(it.role && it.role !== "-" && it.roleFocus !== false){
+        // do not force, but if no current focus, set it for context
+        if(!state.selectedRole){
+          roleFocus.value = it.role;
+          state.selectedRole = it.role;
+          saveState();
         }
-        
-        const d3root = d3.hierarchy(rootNode);
-        const treeLayout = d3.tree().nodeSize([580, 950]);
-        treeLayout(d3root);
+      }
+      applyFocus();
+      jumpToCulture(it.culture);
+      toastMsg(`Selected: ${it.culture} • ${it.role}`);
+    });
 
-        g.selectAll(".link").data(d3root.links()).enter().append("path").attr("class", "link").attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+    searchResults.appendChild(div);
+  }
+}
 
-        const nodes = g.selectAll(".node").data(d3root.descendants()).enter().append("g").attr("transform", d => `translate(${d.y},${d.x})`);
+let searchTimer = null;
+searchInput.addEventListener("input", ()=>{
+  const q = normalize(searchInput.value);
+  state.searchQuery = q;
+  if(searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>{
+    if(!q){
+      renderSearchResults([]);
+      applyFocus();
+      return;
+    }
+    const items = searchIndex
+      .filter(x => x.text.includes(q))
+      .slice(0, 50);
+    renderSearchResults(items);
+    applyFocus();
+  }, 60);
+});
 
-        nodes.each(function(d) {
-            const node = d3.select(this);
-            const h = 550, w = 850;
-            node.append("rect").attr("width", w).attr("height", h).attr("y", -h/2).attr("fill", "#111").attr("stroke", "#444").attr("rx", 5);
-            node.append("text").attr("class", "card-header").attr("x", 15).attr("y", -h/2 + 25).text(d.data.name);
-            
-            const headers = ["ROLE", "NAME", "LINGUISTIC", "FUNCTIONAL", "ETYMOLOGY"];
-            const xPos = [15, 100, 260, 460, 660];
-            headers.forEach((hdr, i) => node.append("text").attr("class", "col-header").attr("x", xPos[i]).attr("y", -h/2 + 45).text(hdr));
-            node.append("line").attr("x1", 10).attr("x2", w-10).attr("y1", -h/2 + 50).attr("y2", -h/2 + 50).attr("stroke", "#333");
+document.addEventListener("click", (e)=>{
+  if(!controls.contains(e.target)) searchResults.style.display="none";
+});
 
-            let y = -h/2 + 70;
-            ['Primordial', 'Titan', 'Father', 'Prince', 'War', 'Love', 'Wisdom', 'Sun', 'Death', 'Mother', 'Sea', 'Moon', 'Fertility'].forEach(role => {
-                const info = d.data.details[role] || ['-', '-', '-', '-'];
-                const col = colors[role] || '#666';
-                node.append("text").attr("class", "row-role").attr("x", xPos[0]).attr("y", y).text(role).style("fill", col);
-                node.append("text").attr("class", "row-name").attr("x", xPos[1]).attr("y", y).text(info[0]);
-                node.append("text").attr("class", "row-data").attr("x", xPos[2]).attr("y", y).text(info[1]);
-                node.append("text").attr("class", "row-data").attr("x", xPos[3]).attr("y", y).text(info[2]);
-                node.append("text").attr("class", "row-data").attr("x", xPos[4]).attr("y", y).text(info[3]);
-                y += 35;
-            });
+/* ================================
+   KEYBOARD SHORTCUTS
+   ================================ */
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "1"){ switchMode("analysis"); }
+  else if(e.key === "2"){ switchMode("tree"); }
+  else if(e.key === "3"){ switchMode("map"); }
+  else if(e.key === "4"){ switchMode("cols"); }
+
+  else if(e.key === "f" || e.key === "F"){ if(state.mode!=="analysis") fitView(); }
+  else if(e.key === "/"){
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+  else if(e.key === "Escape"){
+    searchResults.style.display="none";
+    hideTip();
+  }
+});
+
+/* ================================
+   MODE SWITCHING
+   ================================ */
+function setActiveButton(mode){
+  [btnTree,btnCols,btnMap,btnAnalysis].forEach(b=>b.classList.remove("active"));
+  if(mode==="tree") btnTree.classList.add("active");
+  if(mode==="cols") btnCols.classList.add("active");
+  if(mode==="map") btnMap.classList.add("active");
+  if(mode==="analysis") btnAnalysis.classList.add("active");
+}
+
+function switchMode(mode){
+showMapTools(mode === "map");
+if (mode !== "map") closeDrawer();
+
+  state.mode = mode;
+  saveState();
+  setActiveButton(mode);
+
+  // panel toggles
+  if(mode==="analysis"){
+    svg.style("display","none");
+    analysisView.style.display = "block";
+    treeTools.style.display = "none";
+    analysisTools.style.display = "block";
+    modeLabel.textContent = "Mode: Analysis";
+    return;
+  }
+
+  svg.style("display","block");
+  analysisView.style.display = "none";
+  treeTools.style.display = (mode==="tree" ? "block" : "none");
+  analysisTools.style.display = "none";
+
+  g.selectAll("*").remove();
+
+  if(mode==="tree"){ modeLabel.textContent="Mode: Tree"; renderTree(); }
+  else if(mode==="cols"){ modeLabel.textContent="Mode: Columns"; renderColumns(); }
+  else { modeLabel.textContent="Mode: Map"; renderMap(); }
+
+  applyFocus();
+  renderInspector();
+}
+
+/* ================================
+   SELECTION + COMPARE
+   ================================ */
+function selectCulture(culture, opts={}){
+  state.selectedCulture = culture;
+  // compare add/remove by Shift+Click
+  if(opts.shift){
+    if(state.compare.has(culture)) state.compare.delete(culture);
+    else state.compare.add(culture);
+    saveState();
+  }
+  renderInspector();
+  applySelectionStyles();
+}
+
+function clearSelection(){
+  state.selectedCulture = null;
+  renderInspector();
+  applySelectionStyles();
+  toastMsg("Selection cleared.");
+}
+
+function applySelectionStyles(){
+  // tree cards
+  g.selectAll(".nodeRect").classed("selected", d => d?.data?.name === state.selectedCulture);
+  // columns cells
+  g.selectAll(".colCell").classed("selectedCell", d => d?.culture === state.selectedCulture);
+  // map pins
+  g.selectAll(".pin").classed("focusGlow", d => d?.culture === state.selectedCulture);
+}
+
+/* ================================
+   INSPECTOR RENDER
+   ================================ */
+function renderInspector(){
+  const nameEl = document.getElementById("insName");
+  const metaEl = document.getElementById("insMeta");
+  const bodyEl = document.getElementById("insBody");
+
+  const sel = state.selectedCulture;
+  const focusRole = state.selectedRole;
+
+  nameEl.textContent = sel ? sel : "Nothing selected";
+
+  const compareCount = state.compare.size;
+  const focusLabel = focusRole ? (" • Role focus: " + focusRole) : "";
+  metaEl.textContent = (sel ? ("Shift+Click to compare" + focusLabel) : ("Click a node/pin/cell to inspect" + focusLabel)) +
+    (compareCount ? (" • Compare set: " + compareCount) : "");
+
+  bodyEl.innerHTML = "";
+
+  if(state.tab === "details"){
+    if(!sel){
+      bodyEl.innerHTML = `
+        <div class="kv">
+          <div class="k">Compare</div><div class="v">${compareCount ? compareCount+" selected" : "none"}</div>
+          <div class="k">Role focus</div><div class="v">${focusRole || "(none)"}</div>
+          <div class="k">Modes</div><div class="v">Tree, Columns, Map, Analysis</div>
+          <div class="k">Tip</div><div class="v">Try searching “Thursday” then click a result.</div>
+        </div>
+        <div class="hr"></div>
+        <div class="tiny">If you want this inspector to be docked or collapsible, tell me how you want it to behave.</div>
+      `;
+      return;
+    }
+
+    const node = data[sel];
+    const parent = node?.parent || "-";
+    const coords = node?.coords || [];
+    const d = node?.deities || {};
+
+    let html = `
+      <div class="kv">
+        <div class="k">Parent</div><div class="v">${escapeHtml(parent)}</div>
+        <div class="k">Coords</div><div class="v">${coords.length ? (coords[0].toFixed(2)+", "+coords[1].toFixed(2)) : "-"}</div>
+        <div class="k">Compare</div>
+        <div class="v">
+          <span class="clicky" id="toggleCompare">${state.compare.has(sel) ? "Remove from compare" : "Add to compare"}</span>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;">Role</th>
+            <th>Name</th>
+            <th class="muted">Attribute</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    for(const r of roles){
+      const info = d[r] || ['-','-','-','-'];
+      const col = colors[r] || "#888";
+      const isMissing = info[0] === "-" || info[0] === "" || info[0] == null;
+      html += `
+        <tr>
+          <td><span class="roleTag" style="color:${col}">${escapeHtml(r)}</span></td>
+          <td class="clicky" data-pivot="${escapeHtml(info[0]||"-")}">${escapeHtml(info[0]||"-")}${isMissing ? ' <span class="muted">(missing)</span>' : ''}</td>
+          <td class="muted">${escapeHtml(info[1]||"-")}</td>
+        </tr>
+      `;
+    }
+
+    html += `</tbody></table>
+      <div class="hr"></div>
+      <div class="tiny">Click a deity name to search for it across all cultures.</div>
+    `;
+
+    bodyEl.innerHTML = html;
+
+    const tgl = document.getElementById("toggleCompare");
+    if(tgl){
+      tgl.addEventListener("click", ()=>{
+        if(state.compare.has(sel)) state.compare.delete(sel);
+        else state.compare.add(sel);
+        saveState();
+        renderInspector();
+        toastMsg(state.compare.has(sel) ? "Added to compare." : "Removed from compare.");
+      });
+    }
+
+    bodyEl.querySelectorAll("[data-pivot]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        const term = el.getAttribute("data-pivot");
+        if(term && term !== "-" ){
+          searchInput.value = term;
+          searchInput.dispatchEvent(new Event("input"));
+          toastMsg("Searching: " + term);
+        }
+      });
+    });
+
+    return;
+  }
+
+  if(state.tab === "compare"){
+    const set = [...state.compare];
+    if(!set.length){
+      bodyEl.innerHTML = `
+        <div class="tiny">No cultures in compare set.</div>
+        <div class="hr"></div>
+        <div class="tiny">Use <strong>Shift+Click</strong> on nodes/pins/cells to add/remove.</div>
+      `;
+      return;
+    }
+
+    let html = `
+      <div class="tiny">Compare set (${set.length}). Click a name to inspect.</div>
+      <div class="hr"></div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+        ${set.map(c=>`<div class="pill clicky" data-ins="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join("")}
+      </div>
+      <div class="btnRow" style="margin-bottom:10px;">
+        <button class="iconBtn" id="compareClear">Clear compare</button>
+        <button class="iconBtn" id="compareTable">Show table</button>
+      </div>
+      <div id="compareArea"></div>
+    `;
+    bodyEl.innerHTML = html;
+
+    bodyEl.querySelectorAll("[data-ins]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        selectCulture(el.getAttribute("data-ins"));
+        jumpToCulture(state.selectedCulture);
+      });
+    });
+
+    document.getElementById("compareClear").addEventListener("click", ()=>{
+      state.compare.clear();
+      saveState();
+      renderInspector();
+      toastMsg("Compare cleared.");
+    });
+
+    document.getElementById("compareTable").addEventListener("click", ()=>{
+      const area = document.getElementById("compareArea");
+      area.innerHTML = renderCompareTable(set);
+      area.querySelectorAll("[data-ins]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          selectCulture(el.getAttribute("data-ins"));
+          jumpToCulture(state.selectedCulture);
         });
-        svg.call(zoom.transform, d3.zoomIdentity.translate(50, height/2).scale(0.35));
+      });
+    });
+
+    return;
+  }
+
+  if(state.tab === "stats"){
+    // basic data completeness stats
+    let filled = 0, total = 0;
+    let byRole = {};
+    roles.forEach(r=>byRole[r] = {filled:0, total:0});
+
+    for(const cult of cultures){
+      const d = data[cult].deities || {};
+      for(const r of roles){
+        total++;
+        byRole[r].total++;
+        const info = d[r] || ['-'];
+        const ok = info[0] && info[0] !== "-";
+        if(ok){ filled++; byRole[r].filled++; }
+      }
     }
 
-    // --- RENDER COLUMNS ---
-    function renderColumns() {
-        const cultures = Object.keys(data);
-        const roles = ['Primordial', 'Titan', 'Father', 'Prince', 'War', 'Love', 'Wisdom', 'Sun', 'Death', 'Mother', 'Sea', 'Moon', 'Fertility'];
-        const colWidth = 260;
-        
-        cultures.forEach((cult, i) => {
-            const x = i * colWidth;
-            const details = data[cult].deities;
-            g.append("rect").attr("class", "col-bg").attr("x", x).attr("y", -50).attr("width", colWidth-10).attr("height", 40).attr("fill", "#222");
-            g.append("text").attr("class", "col-title").attr("x", x + colWidth/2 - 5).attr("y", -25).text(cult);
-            
-            roles.forEach((role, j) => {
-                const y = (j * 70);
-                const info = details[role] || ['-', '-', '-', '-'];
-                const col = colors[role] || '#fff';
-                g.append("rect").attr("class", "col-bg").attr("x", x).attr("y", y).attr("width", colWidth-10).attr("height", 65).attr("fill", "#111");
-                g.append("text").attr("x", x+5).attr("y", y+15).text(role).attr("font-size", "9px").attr("fill", col).attr("font-weight", "bold");
-                g.append("text").attr("x", x+5).attr("y", y+35).text(info[0]).attr("font-size", "12px").attr("fill", "#fff").attr("font-weight", "bold");
-                g.append("text").attr("x", x+5).attr("y", y+50).text(info[1]).attr("font-size", "9px").attr("fill", "#888");
-            });
+    const pct = total ? Math.round((filled/total)*100) : 0;
+
+    bodyEl.innerHTML = `
+      <div class="kv">
+        <div class="k">Cultures</div><div class="v">${cultures.length}</div>
+        <div class="k">Slots</div><div class="v">${total}</div>
+        <div class="k">Filled</div><div class="v">${filled} (${pct}%)</div>
+        <div class="k">Focus role</div><div class="v">${state.selectedRole || "(none)"}</div>
+      </div>
+      <div class="hr"></div>
+      <table>
+        <thead><tr><th>Role</th><th>Filled</th><th>Missing</th></tr></thead>
+        <tbody>
+          ${roles.map(r=>{
+            const f = byRole[r].filled, t = byRole[r].total;
+            const m = t - f;
+            return `<tr>
+              <td><span class="roleTag" style="color:${colors[r]||"#999"}">${escapeHtml(r)}</span></td>
+              <td>${f}/${t}</td>
+              <td class="muted">${m}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+      <div class="hr"></div>
+      <div class="tiny">If you want, we can add a “data editor” panel to fill missing slots inside the app and export your updated JSON.</div>
+    `;
+    return;
+  }
+
+  if(state.tab === "settings"){
+    bodyEl.innerHTML = `
+      <div class="tiny">
+        <div style="margin-bottom:10px;"><strong>Preferences</strong></div>
+        <ul>
+          <li>Mode, role focus, and tree collapse state are saved in localStorage.</li>
+          <li>Export PNG uses an SVG→Canvas path and may vary by browser.</li>
+          <li>Shift+Click adds/removes items from compare set.</li>
+        </ul>
+      </div>
+      <div class="hr"></div>
+      <div class="btnRow">
+        <button class="iconBtn" id="wipeLocal">Reset saved preferences</button>
+        <button class="iconBtn" id="toggleInspector">${ins.style.display==="none" ? "Show inspector" : "Hide inspector"}</button>
+      </div>
+      <div class="hr"></div>
+      <div class="tiny">If you want additional modes (timeline, clustering, or a “pantheon graph”), tell me what you want the experience to feel like.</div>
+    `;
+
+    document.getElementById("wipeLocal").addEventListener("click", ()=>{
+      localStorage.removeItem(STORAGE_KEY);
+      toastMsg("Saved preferences cleared. Reload to reset fully.");
+    });
+
+    document.getElementById("toggleInspector").addEventListener("click", ()=>{
+      ins.style.display = (ins.style.display==="none" ? "flex" : "none");
+    });
+
+    return;
+  }
+}
+
+function renderCompareTable(set){
+  // show role rows; each column = culture
+  let html = `<table>
+    <thead><tr>
+      <th style="width:90px;">Role</th>
+      ${set.map(c=>`<th class="clicky" data-ins="${escapeHtml(c)}">${escapeHtml(c)}</th>`).join("")}
+    </tr></thead><tbody>`;
+
+  for(const r of roles){
+    html += `<tr>
+      <td><span class="roleTag" style="color:${colors[r]||"#999"}">${escapeHtml(r)}</span></td>
+      ${set.map(c=>{
+        const info = (data[c]?.deities?.[r]) || ['-','-','-','-'];
+        const v = info[0] || '-';
+        return `<td>${escapeHtml(v)}<div class="muted" style="font-size:10px; margin-top:2px;">${escapeHtml(info[1]||"-")}</div></td>`;
+      }).join("")}
+    </tr>`;
+  }
+
+  html += `</tbody></table>`;
+  return html;
+}
+
+/* ================================
+   TOOLTIP
+   ================================ */
+function showTip(x,y,html){
+  tip.innerHTML = html;
+  tip.style.left = (x+14)+"px";
+  tip.style.top  = (y+14)+"px";
+  tip.classList.add("show");
+}
+function hideTip(){ tip.classList.remove("show"); }
+
+/* ================================
+   TOAST
+   ================================ */
+let toastTimer=null;
+function toastMsg(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove("show"), 1600);
+}
+
+/* ================================
+   HELP
+   ================================ */
+function showHelp(){
+  toastMsg("Help: Wheel zoom • Drag pan • Click inspect • Shift+Click compare • / search • F fit");
+}
+
+/* ================================
+   EXPORTS
+   ================================ */
+function downloadBlob(filename, blob){
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 800);
+}
+
+function exportJson(){
+  const blob = new Blob([JSON.stringify({data, worldMap}, null, 2)], {type:"application/json"});
+  downloadBlob("mythological-codex-data.json", blob);
+  toastMsg("Exported JSON.");
+}
+
+function exportSvg(){
+  if(state.mode==="analysis"){
+    toastMsg("Switch to a visual mode to export SVG.");
+    return;
+  }
+  const node = document.getElementById("canvas");
+  const clone = node.cloneNode(true);
+
+  // ensure width/height attributes exist
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("width", width);
+  clone.setAttribute("height", height);
+
+  const serializer = new XMLSerializer();
+  const svgText = serializer.serializeToString(clone);
+  const blob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
+  downloadBlob("mythological-codex.svg", blob);
+  toastMsg("Exported SVG.");
+}
+
+async function exportPng(){
+  if(state.mode==="analysis"){
+    toastMsg("Switch to a visual mode to export PNG.");
+    return;
+  }
+  try{
+    const node = document.getElementById("canvas");
+    const serializer = new XMLSerializer();
+    const svgText = serializer.serializeToString(node);
+
+    const svgBlob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    const p = new Promise((res, rej)=>{
+      img.onload = ()=>res();
+      img.onerror = (e)=>rej(e);
+    });
+    img.src = url;
+    await p;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    // background fill
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(0,0,width,height);
+
+    ctx.drawImage(img,0,0);
+
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob((b)=>{
+      if(!b){ toastMsg("PNG export failed."); return; }
+      downloadBlob("mythological-codex.png", b);
+      toastMsg("Exported PNG.");
+    }, "image/png");
+  }catch(e){
+    toastMsg("PNG export blocked by browser.");
+  }
+}
+
+/* ================================
+   COPY SELECTED
+   ================================ */
+function copySelected(){
+  const sel = state.selectedCulture;
+  if(!sel){
+    toastMsg("Nothing selected.");
+    return;
+  }
+  const node = data[sel];
+  const out = [];
+  out.push(`Culture: ${sel}`);
+  out.push(`Parent: ${node.parent}`);
+  out.push(`Coords: ${node.coords?.join(", ")}`);
+  out.push("");
+  for(const r of roles){
+    const info = node.deities?.[r] || ['-','-','-','-'];
+    out.push(`${r}: ${info.join(" | ")}`);
+  }
+  const txt = out.join("\n");
+  navigator.clipboard?.writeText(txt).then(()=>toastMsg("Copied."), ()=>toastMsg("Copy failed."));
+}
+
+/* ================================
+   RENDER: TREE
+   ================================ */
+function buildHierarchy(){
+  const nodeMap = {};
+  let rootNode = null;
+
+  for(const [key,val] of Object.entries(data)){
+    nodeMap[key] = { name:key, details: val.deities, children: [], _children: [], parentName: val.parent, coords: val.coords };
+  }
+  for(const [key,val] of Object.entries(data)){
+    if(val.parent === "Root") rootNode = nodeMap[key];
+    else if(nodeMap[val.parent]){
+      nodeMap[val.parent].children.push(nodeMap[key]);
+    }
+  }
+
+  // apply collapsed state: move children-> _children
+  function applyCollapse(n){
+    if(state.collapsed.has(n.name)){
+      n._children = n.children;
+      n.children = [];
+    }else{
+      if(n._children && n._children.length){
+        // keep them collapsed unless removed from state
+      }
+    }
+    const kids = (n.children || []).concat(n._children || []);
+    for(const k of kids){
+      applyCollapse(k);
+    }
+  }
+  applyCollapse(rootNode);
+
+  return d3.hierarchy(rootNode, d => d.children);
+}
+
+function roleRowCount(details){
+  // fixed role list for consistent cards
+  return roles.length;
+}
+
+function wrapSvgText(textSel, widthPx){
+  // basic multi-line wrap for SVG text (tspans)
+  textSel.each(function(){
+    const text = d3.select(this);
+    const words = (text.text() || "").split(/\s+/).filter(Boolean);
+    text.text(null);
+    let line = [];
+    let lineNumber = 0;
+    const lineHeight = 1.15;
+    const y = +text.attr("y");
+    const x = +text.attr("x");
+    const dy = (text.attr("dy") ? +text.attr("dy") : 0);
+    let tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+    for(const w of words){
+      line.push(w);
+      tspan.text(line.join(" "));
+      if(tspan.node().getComputedTextLength() > widthPx){
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [w];
+        tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", (++lineNumber * lineHeight) + "em").text(w);
+      }
+      if(lineNumber > 2) break; // keep small
+    }
+  });
+}
+
+function renderTree(){
+  g.selectAll("*").remove();
+
+  const root = buildHierarchy();
+  const treeLayout = d3.tree().nodeSize([520, 960]);
+  treeLayout(root);
+
+  // links
+  const link = g.selectAll(".link")
+    .data(root.links())
+    .enter()
+    .append("path")
+    .attr("class","link")
+    .attr("d", d3.linkHorizontal().x(d=>d.y).y(d=>d.x));
+
+  // nodes
+  const nodes = g.selectAll(".node")
+    .data(root.descendants())
+    .enter()
+    .append("g")
+    .attr("class","node")
+    .attr("data-culture", d=>d.data.name)
+    .attr("transform", d=>`translate(${d.y},${d.x})`);
+
+  nodes.each(function(d){
+    const node = d3.select(this);
+    const w = 860;
+    const headerH = 62;
+    const rowH = 26;
+    const pad = 14;
+    const rows = roleRowCount(d.data.details);
+    const h = headerH + rows*rowH + 18;
+
+    // card group
+    const card = node.append("g").attr("class","nodeCard");
+
+    card.append("rect")
+      .attr("class","nodeRect")
+      .attr("width", w)
+      .attr("height", h)
+      .attr("y", -h/2)
+      .attr("rx", 10);
+
+    // top band
+    card.append("rect")
+      .attr("width", w)
+      .attr("height", 40)
+      .attr("y", -h/2)
+      .attr("rx", 10)
+      .attr("fill", "rgba(255,255,255,0.03)")
+      .attr("stroke", "none");
+
+    card.append("text")
+      .attr("class","card-header")
+      .attr("x", pad)
+      .attr("y", -h/2 + 26)
+      .text(d.data.name);
+
+    // collapse/expand glyph
+    const hasKids = (d.data.children && d.data.children.length) || (d.data._children && d.data._children.length);
+    const glyph = card.append("text")
+      .attr("x", w - 18)
+      .attr("y", -h/2 + 26)
+      .attr("fill", "rgba(255,255,255,0.75)")
+      .attr("font-size", 16)
+      .attr("text-anchor","end")
+      .attr("cursor","pointer")
+      .text(hasKids ? (state.collapsed.has(d.data.name) ? "▸" : "▾") : "");
+
+    // column headers
+    const headers = ["ROLE","NAME","LINGUISTIC","FUNCTIONAL","ETYMOLOGY"];
+    const xPos = [pad, 110, 285, 485, 680];
+    headers.forEach((hdr,i)=>{
+      card.append("text")
+        .attr("class","col-header")
+        .attr("x", xPos[i])
+        .attr("y", -h/2 + 52)
+        .text(hdr);
+    });
+
+    card.append("line")
+      .attr("class","divider")
+      .attr("x1", pad)
+      .attr("x2", w - pad)
+      .attr("y1", -h/2 + 58)
+      .attr("y2", -h/2 + 58);
+
+    // hover row highlight
+    const hover = card.append("rect")
+      .attr("class","hoverRow")
+      .attr("x", pad-6)
+      .attr("width", w - (pad-6) - pad + 6)
+      .attr("height", rowH)
+      .attr("y", -h/2 + 64)
+      .attr("rx", 8)
+      .attr("fill", "rgba(212,175,55,0.10)")
+      .attr("stroke", "rgba(212,175,55,0.25)")
+      .attr("stroke-width", 1);
+
+    // rows
+    let y = -h/2 + 84;
+    roles.forEach((role, idx)=>{
+      const info = d.data.details?.[role] || ['-','-','-','-'];
+      const col = colors[role] || "#888";
+
+      card.append("text").attr("class","row-role").attr("x", xPos[0]).attr("y", y).style("fill", col).text(role);
+
+      const nameT = card.append("text").attr("class","row-name").attr("x", xPos[1]).attr("y", y).text(info[0]||"-");
+      wrapSvgText(nameT, 160);
+
+      const t2 = card.append("text").attr("class","row-data").attr("x", xPos[2]).attr("y", y).text(info[1]||"-");
+      wrapSvgText(t2, 160);
+
+      const t3 = card.append("text").attr("class","row-data").attr("x", xPos[3]).attr("y", y).text(info[2]||"-");
+      wrapSvgText(t3, 170);
+
+      const t4 = card.append("text").attr("class","row-data").attr("x", xPos[4]).attr("y", y).text(info[3]||"-");
+      wrapSvgText(t4, 160);
+
+      // row interactions: tooltip + role focus preview
+      const rowY = y - rowH + 6;
+      card.append("rect")
+        .attr("x", pad-6)
+        .attr("y", rowY)
+        .attr("width", w - (pad-6) - pad + 6)
+        .attr("height", rowH)
+        .attr("fill", "transparent")
+        .attr("cursor","pointer")
+        .on("mousemove", (ev)=>{
+          hover.attr("y", rowY).classed("show", true);
+          const html = `
+            <div class="tRole" style="color:${col}">${escapeHtml(role)}</div>
+            <div class="tTitle">${escapeHtml(d.data.name)} • ${escapeHtml(info[0]||"-")}</div>
+            <div class="tSub">${escapeHtml(info[1]||"-")} • ${escapeHtml(info[2]||"-")}</div>
+          `;
+          showTip(ev.clientX, ev.clientY, html);
+        })
+        .on("mouseleave", ()=>{
+          hover.classed("show", false);
+          hideTip();
+        })
+        .on("click", (ev)=>{
+          // click row: select culture + set role focus to that role
+          selectCulture(d.data.name, {shift: ev.shiftKey});
+          roleFocus.value = role;
+          state.selectedRole = role;
+          saveState();
+          applyFocus();
+          renderInspector();
+          applySelectionStyles();
         });
-        svg.call(zoom.transform, d3.zoomIdentity.translate(50, 100).scale(0.8));
-    }
 
-    // --- RENDER MAP ---
-    function renderMap() {
-        const projection = d3.geoMercator().scale(160).translate([width/2, height/1.5]);
-        const path = d3.geoPath().projection(projection);
-        
-        g.selectAll("path").data(worldMap.features).enter().append("path").attr("d", path).attr("class", "land").attr("fill", "#1a1a1a").attr("stroke", "#333");
+      y += rowH;
+    });
 
-        const nodeMap = {};
-        for (const [key, val] of Object.entries(data)) nodeMap[key] = val;
-        
-        for (const [key, val] of Object.entries(data)) {
-            if (val.parent !== 'Root' && nodeMap[val.parent]) {
-                const p1 = projection([val.coords[1], val.coords[0]]);
-                const p2 = projection([nodeMap[val.parent].coords[1], nodeMap[val.parent].coords[0]]);
-                g.append("line").attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1])
-                 .attr("stroke", "#D4AF37").attr("stroke-width", 2.5).attr("opacity", 0.8).attr("stroke-dasharray", "5,5");
-            }
+    // click whole card to select + lineage highlight
+    card.on("click", (ev)=>{
+      if(ev.defaultPrevented) return;
+      selectCulture(d.data.name, {shift: ev.shiftKey});
+      applySelectionStyles();
+      highlightLineage(d);
+      // if not shift compare, keep selection in view
+      if(!ev.shiftKey) centerOnNode(d.data.name);
+    })
+    .on("mousemove", (ev)=>{
+      const html = `
+        <div class="tTitle">${escapeHtml(d.data.name)}</div>
+        <div class="tSub">Parent: ${escapeHtml(d.data.parentName||"-")} • Shift+Click: compare</div>
+      `;
+      showTip(ev.clientX, ev.clientY, html);
+    })
+    .on("mouseleave", hideTip);
+
+    glyph.on("click", (ev)=>{
+      ev.stopPropagation();
+      toggleCollapse(d.data.name);
+    });
+  });
+
+  // initial fit
+  fitView();
+  applySelectionStyles();
+}
+
+/* collapse/expand */
+function toggleCollapse(cult){
+  if(state.collapsed.has(cult)) state.collapsed.delete(cult);
+  else state.collapsed.add(cult);
+  saveState();
+  renderTree();
+  applyFocus();
+  if(state.selectedCulture) selectCulture(state.selectedCulture);
+}
+
+/* lineage highlight */
+function highlightLineage(nodeD){
+  if(!nodeD) return;
+  // clear
+  g.selectAll(".link").classed("glow", false);
+  g.selectAll(".nodeRect").classed("focusGlow", false);
+
+  // walk to root
+  let cur = nodeD;
+  const set = new Set();
+  while(cur){
+    set.add(cur.data.name);
+    cur = cur.parent;
+  }
+
+  g.selectAll(".node")
+    .filter(d=>set.has(d.data.name))
+    .select(".nodeRect")
+    .classed("focusGlow", true);
+
+  g.selectAll(".link")
+    .classed("glow", d => set.has(d.target.data.name) && set.has(d.source.data.name));
+
+  setTimeout(()=>{
+    g.selectAll(".link").classed("glow", false);
+    g.selectAll(".nodeRect").classed("focusGlow", false);
+    applySelectionStyles();
+    applyFocus();
+  }, 1400);
+}
+
+/* center on node */
+function centerOnNode(culture){
+  const sel = g.selectAll(".node").filter(d=>d.data.name===culture);
+  if(sel.empty()) return;
+  const m = sel.node().getCTM();
+  // if CTM missing, fallback
+  const bbox = sel.node().getBBox();
+  const x = (bbox.x + bbox.width/2);
+  const y = (bbox.y + bbox.height/2);
+  const t = state.lastTransform;
+  const cx = width/2;
+  const cy = height/2;
+  const nx = cx - (t.k * x);
+  const ny = cy - (t.k * y);
+  svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(nx, ny).scale(t.k));
+}
+
+/* ================================
+   RENDER: COLUMNS
+   ================================ */
+function renderColumns(){
+  g.selectAll("*").remove();
+
+  const colWidth = 275;
+  const cellH = 66;
+  const headerH = 44;
+  const xPad = 14;
+
+  const topY = 40;
+
+  // background strip
+  g.append("rect")
+    .attr("x", -50)
+    .attr("y", -80)
+    .attr("width", cultures.length*colWidth + 120)
+    .attr("height", 80)
+    .attr("fill", "rgba(255,255,255,0.02)")
+    .attr("stroke", "rgba(255,255,255,0.08)");
+
+  cultures.forEach((cult, i)=>{
+    const x = i * colWidth;
+
+    // header
+    g.append("rect")
+      .attr("x", x)
+      .attr("y", 0)
+      .attr("width", colWidth-10)
+      .attr("height", headerH)
+      .attr("rx", 10)
+      .attr("fill", "rgba(255,255,255,0.03)")
+      .attr("stroke", "rgba(255,255,255,0.10)");
+
+    g.append("text")
+      .attr("x", x + (colWidth-10)/2)
+      .attr("y", 26)
+      .attr("text-anchor","middle")
+      .attr("fill", "#D4AF37")
+      .attr("font-weight", 900)
+      .attr("font-size", 13)
+      .text(cult)
+      .attr("cursor","pointer")
+      .on("click", (ev)=>{
+        selectCulture(cult, {shift: ev.shiftKey});
+        applySelectionStyles();
+        toastMsg("Selected: " + cult);
+      });
+
+    const details = data[cult].deities || {};
+    roles.forEach((role, j)=>{
+      const y = topY + (j * (cellH+8));
+      const info = details[role] || ['-','-','-','-'];
+      const col = colors[role] || "#999";
+
+      const cell = g.append("g")
+        .attr("class","colCell")
+        .datum({culture:cult, role})
+        .attr("transform", `translate(${x},${y})`)
+        .attr("cursor","pointer")
+        .on("mousemove", (ev)=>{
+          const html = `
+            <div class="tRole" style="color:${col}">${escapeHtml(role)}</div>
+            <div class="tTitle">${escapeHtml(cult)} • ${escapeHtml(info[0]||"-")}</div>
+            <div class="tSub">${escapeHtml(info[1]||"-")} • Shift+Click: compare</div>
+          `;
+          showTip(ev.clientX, ev.clientY, html);
+        })
+        .on("mouseleave", hideTip)
+        .on("click", (ev)=>{
+          selectCulture(cult, {shift: ev.shiftKey});
+          roleFocus.value = role;
+          state.selectedRole = role;
+          saveState();
+          applySelectionStyles();
+          applyFocus();
+          renderInspector();
+        });
+
+      cell.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", colWidth-10)
+        .attr("height", cellH)
+        .attr("rx", 12)
+        .attr("fill", "rgba(0,0,0,0.35)")
+        .attr("stroke", "rgba(255,255,255,0.10)");
+
+      cell.append("text")
+        .attr("x", xPad)
+        .attr("y", 16)
+        .attr("fill", col)
+        .attr("font-size", 10)
+        .attr("font-weight", 900)
+        .attr("text-transform","uppercase")
+        .text(role);
+
+      const nameT = cell.append("text")
+        .attr("x", xPad)
+        .attr("y", 36)
+        .attr("fill", "#fff")
+        .attr("font-size", 13)
+        .attr("font-weight", 900)
+        .text(info[0]||"-");
+
+      // keep it tidy
+      wrapSvgText(nameT, colWidth-10 - xPad*2);
+
+      const metaT = cell.append("text")
+        .attr("x", xPad)
+        .attr("y", 54)
+        .attr("fill", "rgba(255,255,255,0.60)")
+        .attr("font-size", 10)
+        .text(info[1]||"-");
+
+      wrapSvgText(metaT, colWidth-10 - xPad*2);
+    });
+  });
+
+  fitView();
+  applySelectionStyles();
+}
+
+/* ================================
+   RENDER: MAP
+   ================================ */
+
+
+
+
+/* ================================
+   VIEW HELPERS: FIT/RESET/JUMP
+   ================================ */
+function resetView(){
+  svg.transition().duration(350).call(zoom.transform, d3.zoomIdentity);
+  toastMsg("Reset.");
+}
+
+function fitView(){
+  if(state.mode === "analysis") return;
+
+  const bbox = g.node().getBBox();
+  if(!bbox || !isFinite(bbox.width) || !isFinite(bbox.height) || bbox.width===0 || bbox.height===0){
+    resetView();
+    return;
+  }
+
+  const padding = 40;
+  const scale = Math.min(
+    6,
+    Math.max(0.03, Math.min((width - padding*2) / bbox.width, (height - padding*2) / bbox.height))
+  );
+
+  const tx = (width/2) - scale * (bbox.x + bbox.width/2);
+  const ty = (height/2) - scale * (bbox.y + bbox.height/2);
+
+  svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+
+function jumpToCulture(culture){
+  if(state.mode==="analysis") return;
+  if(!culture) return;
+
+  if(state.mode==="tree"){
+    centerOnNode(culture);
+    return;
+  }
+
+  // columns: try to center on column header by bbox search
+  if(state.mode==="cols"){
+    // approximate: find any cell with culture
+    const sel = g.selectAll(".colCell").filter(d=>d.culture===culture);
+    if(sel.empty()) return;
+    const node = sel.node();
+    const bbox = node.getBBox();
+    const t = state.lastTransform;
+    const x = bbox.x + bbox.width/2;
+    const y = bbox.y + bbox.height/2;
+    const cx = width/2, cy = height/2;
+    const nx = cx - (t.k * x);
+    const ny = cy - (t.k * y);
+    svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(nx, ny).scale(t.k));
+    return;
+  }
+
+  // map: center on pin
+  if(state.mode==="map"){
+    const sel = g.selectAll(".pin").filter(d=>d.culture===culture);
+    if(sel.empty()) return;
+    const node = sel.node();
+    const bbox = node.getBBox();
+    const t = state.lastTransform;
+    const x = bbox.x + bbox.width/2;
+    const y = bbox.y + bbox.height/2;
+    const cx = width/2, cy = height/2;
+    const nx = cx - (t.k * x);
+    const ny = cy - (t.k * y);
+    svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(nx, ny).scale(Math.max(t.k, 1.2)));
+  }
+}
+
+/* ================================
+   FOCUS FILTERING / HIGHLIGHTING
+   ================================ */
+function applyFocus(){
+  const r = state.selectedRole;
+  const q = state.searchQuery;
+
+  // base: clear dim
+  g.selectAll("*").classed("dim", false);
+
+  // role focus dims non-matching role rows/cells/pins
+  if(r){
+    if(state.mode==="tree"){
+      // dim row overlays by role: easiest is to dim all text except matching role lines
+      // We’ll dim by scanning row-role text content.
+      g.selectAll(".row-role").each(function(){
+        const t = d3.select(this);
+        const is = (t.text() === r);
+        // dim its entire row group roughly by selecting next siblings? Instead: dim just non-matching role labels + row texts by proximity
+        if(!is){
+          t.classed("dim", true);
+        }else{
+          t.classed("focusGlow", true);
         }
-        
-        for(const [key, val] of Object.entries(data)) {
-            const [x, y] = projection([val.coords[1], val.coords[0]]);
-            const node = g.append("g").attr("transform", `translate(${x},${y})`);
-            node.append("circle").attr("class", "map-pin").attr("r", 5);
-            node.append("text").attr("y", -10).attr("text-anchor", "middle").text(key).style("fill", "white").style("font-size", "11px").style("text-shadow", "0 0 3px black").style("font-weight", "bold");
-        }
-        svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
+      });
     }
+    if(state.mode==="cols"){
+      g.selectAll(".colCell").classed("dim", d => d.role !== r);
+    }
+    if(state.mode==="map"){
+      // map doesn't have roles, so no role dim: keep as-is
+    }
+  }
+
+  // search query dims non-matching cultures across views
+  if(q){
+    // cultures matching the query in any field
+    const matchingCultures = new Set(
+      searchIndex.filter(x=>x.text.includes(q)).map(x=>x.culture)
+    );
+    if(state.mode==="tree"){
+      g.selectAll(".node").classed("dim", d=>!matchingCultures.has(d.data.name));
+      g.selectAll(".link").classed("dim", d=>!matchingCultures.has(d.target.data.name));
+    }else if(state.mode==="cols"){
+      g.selectAll(".colCell").classed("dim", d=>!matchingCultures.has(d.culture));
+    }else if(state.mode==="map"){
+      g.selectAll(".pin").classed("dim", d=>!matchingCultures.has(d.culture));
+      g.selectAll(".map-line").classed("dim", true); // de-emphasize lines during search
+    }
+  }
+
+  // selection emphasis
+  applySelectionStyles();
+}
+
+/* ================================
+   RESIZE HANDLING
+   ================================ */
+let resizeTimer=null;
+window.addEventListener("resize", ()=>{
+  if(resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    setSvgSize();
+    if(state.mode==="tree") renderTree();
+    else if(state.mode==="cols") renderColumns();
+    else if(state.mode==="map") renderMap();
+    applyFocus();
+    renderInspector();
+  }, 120);
+});
+
+/* ================================
+   UTIL
+   ================================ */
+function escapeHtml(s){
+  return (s ?? "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* ================================
+   INITIAL BOOT
+   ================================ */
+function boot(){
+  // set active mode button
+  setActiveButton(state.mode);
+  // set role focus
+  roleFocus.value = state.selectedRole || "";
+  // show mode
+  switchMode(state.mode);
+  // if analysis mode, adjust controls label
+  if(state.mode==="analysis"){
+    modeLabel.textContent = "Mode: Analysis";
+  }
+  renderInspector();
+}
+boot();
 </script>
 </body>
 </html>
